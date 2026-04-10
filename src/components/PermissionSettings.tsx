@@ -73,10 +73,28 @@ export default function PermissionSettings() {
       </div>
 
       <div className="bg-surface-container-lowest rounded-2xl p-8 border border-outline-variant/5 shadow-sm">
-        <h3 className="text-md font-bold mb-6 flex items-center gap-2 text-on-surface">
-          <Ruler className="text-primary-container w-5 h-5" />
-          交互权限明细
-        </h3>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+          <h3 className="text-md font-bold flex items-center gap-2 text-on-surface">
+            <Ruler className="text-primary-container w-5 h-5" />
+            交互权限明细
+          </h3>
+          
+          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${
+            localPermissions.allowRealtime 
+              ? 'bg-primary-container/10 text-primary-container' 
+              : 'bg-surface-container-high text-on-surface-variant/60'
+          }`}>
+            <span className="relative flex h-2 w-2">
+              {localPermissions.allowRealtime && (
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-container opacity-75"></span>
+              )}
+              <span className={`relative inline-flex rounded-full h-2 w-2 ${
+                localPermissions.allowRealtime ? 'bg-primary-container' : 'bg-on-surface-variant/40'
+              }`}></span>
+            </span>
+            {localPermissions.allowRealtime ? '实时协作已开启' : '实时协作已停用'}
+          </div>
+        </div>
         <div className="grid md:grid-cols-2 gap-x-12 gap-y-6">
           <div className="space-y-4">
             <PermissionToggle 

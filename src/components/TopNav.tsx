@@ -1,13 +1,42 @@
 import { Search, Bell } from 'lucide-react';
+import { useApp } from '../AppContext';
 
 export default function TopNav() {
+  const { state, setView } = useApp();
+
   return (
     <header className="fixed top-0 w-full h-14 z-50 bg-white/80 backdrop-blur-xl flex items-center justify-between px-6 border-b border-outline-variant/10">
       <div className="flex items-center gap-8">
-        <div className="text-xl font-bold text-primary-container tracking-tight font-headline">知识空间</div>
+        <div 
+          className="flex items-center gap-2 cursor-pointer" 
+          onClick={() => setView('workbench')}
+        >
+          <div className="w-8 h-8 bg-primary-container rounded-lg flex items-center justify-center text-white font-bold text-lg">
+            K
+          </div>
+          <span className="font-headline font-bold text-lg text-on-surface tracking-tight">知识空间</span>
+        </div>
         <nav className="hidden md:flex gap-6 items-center">
-          <a className="text-on-surface-variant font-headline text-sm hover:bg-surface-container-low transition-colors px-3 py-1 rounded-md" href="#">工作台</a>
-          <a className="text-primary-container font-semibold border-b-2 border-primary-container font-headline text-sm px-3 py-1" href="#">管理</a>
+          <button 
+            onClick={() => setView('workbench')}
+            className={`font-headline text-sm px-3 py-1 rounded-md transition-colors ${
+              state.view === 'workbench' 
+                ? 'text-primary-container font-semibold border-b-2 border-primary-container' 
+                : 'text-on-surface-variant hover:bg-surface-container-low'
+            }`}
+          >
+            工作台
+          </button>
+          <button 
+            onClick={() => setView('management')}
+            className={`font-headline text-sm px-3 py-1 rounded-md transition-colors ${
+              state.view === 'management' 
+                ? 'text-primary-container font-semibold border-b-2 border-primary-container' 
+                : 'text-on-surface-variant hover:bg-surface-container-low'
+            }`}
+          >
+            管理
+          </button>
         </nav>
       </div>
       <div className="flex items-center gap-4">

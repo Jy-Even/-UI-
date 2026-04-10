@@ -12,25 +12,33 @@ import InfoSettings from './components/InfoSettings';
 import DataExport from './components/DataExport';
 import CreateKBModal from './components/CreateKBModal';
 import Workbench from './components/Workbench';
+import DocumentManagement from './components/DocumentManagement';
+import Trash from './components/Trash';
+import DocumentEditor from './components/DocumentEditor';
+import CreateDocModal from './components/CreateDocModal';
+import TemplateGalleryModal from './components/TemplateGalleryModal';
 import { AppProvider, useApp } from './AppContext';
 
 function AppContent() {
-  const { state, setView, setManagementTab } = useApp();
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { state, setView, setManagementTab, isCreateModalOpen, setIsCreateModalOpen, setIsCreateDocModalOpen } = useApp();
 
   const selectedKB = state.knowledgeBases.find(kb => kb.id === state.selectedKBId);
+
+  if (state.view === 'editor') {
+    return <DocumentEditor />;
+  }
 
   return (
     <div className="min-h-screen bg-surface">
       <TopNav />
       
       <div className="flex pt-14 h-screen overflow-hidden">
-        <Sidebar onCreateNew={() => setIsModalOpen(true)} />
+        <Sidebar onCreateNew={() => setIsCreateDocModalOpen(true)} />
         
         <main className="flex-1 ml-[240px] overflow-y-auto bg-surface custom-scrollbar">
-          {state.view === 'workbench' ? (
-            <Workbench />
-          ) : (
+          {state.view === 'workbench' && <Workbench />}
+          {state.view === 'trash' && <Trash />}
+          {state.view === 'management' && (
             <>
               {/* Context Header & Top Tabs */}
               <div className="bg-surface-container-lowest px-10 pt-8 pb-0 sticky top-0 z-40 border-b border-outline-variant/5">
@@ -41,6 +49,7 @@ function AppContent() {
                     <span>{selectedKB?.name}</span>
                   </nav>
                   <h1 className="text-2xl font-extrabold font-headline text-on-surface tracking-tight">
+                    {state.managementTab === 'docs' && '文档管理'}
                     {state.managementTab === 'info' && '信息设置'}
                     {state.managementTab === 'members' && '成员管理'}
                     {state.managementTab === 'permissions' && '权限配置'}
@@ -50,6 +59,11 @@ function AppContent() {
                 </div>
                 
                 <div className="flex gap-10">
+                  <TabButton 
+                    active={state.managementTab === 'docs'} 
+                    onClick={() => setManagementTab('docs')}
+                    label="文档管理"
+                  />
                   <TabButton 
                     active={state.managementTab === 'info'} 
                     onClick={() => setManagementTab('info')}
@@ -79,6 +93,7 @@ function AppContent() {
               </div>
 
               <div className="p-10 max-w-6xl">
+                {state.managementTab === 'docs' && <DocumentManagement />}
                 {state.managementTab === 'info' && <InfoSettings />}
                 {state.managementTab === 'members' && <MemberManagement />}
                 {state.managementTab === 'permissions' && <PermissionSettings />}
@@ -94,11 +109,13 @@ function AppContent() {
         </main>
       </div>
 
-      <CreateKBModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+      <CreateKBModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} />
+      <CreateDocModal />
+      <TemplateGalleryModal />
       
       {/* Floating Action Button for Demo */}
       <button 
-        onClick={() => setIsModalOpen(true)}
+        onClick={() => setIsCreateDocModalOpen(true)}
         className="fixed bottom-8 right-8 w-14 h-14 bg-primary-container text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-transform z-50"
       >
         <span className="material-symbols-outlined">add</span>

@@ -1,4 +1,4 @@
-import { FolderHeart, Plus, Info, Users, ShieldCheck, FileOutput, Trash2, Settings, LayoutDashboard, ChevronDown } from 'lucide-react';
+import { FolderHeart, Plus, Info, Users, ShieldCheck, FileOutput, Trash2, Settings, LayoutDashboard, ChevronDown, FileText } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useApp } from '../AppContext';
 
@@ -11,6 +11,7 @@ export default function Sidebar({ onCreateNew }: SidebarProps) {
   const selectedKB = state.knowledgeBases.find(kb => kb.id === state.selectedKBId);
 
   const navItems = [
+    { id: 'docs', icon: FileText, label: '文档管理' },
     { id: 'info', icon: Info, label: '信息设置' },
     { id: 'members', icon: Users, label: '成员管理' },
     { id: 'permissions', icon: ShieldCheck, label: '权限配置' },
@@ -96,14 +97,27 @@ export default function Sidebar({ onCreateNew }: SidebarProps) {
       </div>
 
       <div className="mt-auto pt-6 space-y-1">
-        <a className="flex items-center gap-3 px-3 py-2.5 text-sm text-error hover:bg-error-container/20 rounded-lg transition-all" href="#">
+        <button 
+          onClick={() => setView('trash')}
+          className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm rounded-lg transition-all ${
+            state.view === 'trash'
+              ? 'bg-error-container/20 text-error font-bold'
+              : 'text-on-surface-variant hover:bg-surface-container-low hover:text-error'
+          }`}
+        >
           <Trash2 className="w-5 h-5" />
-          危险区域
-        </a>
-        <a className="flex items-center gap-3 px-3 py-2.5 text-sm text-on-surface-variant hover:bg-white/30 rounded-lg transition-all" href="#">
+          回收站
+        </button>
+        <button 
+          onClick={() => {
+            setManagementTab('permissions');
+            setView('management');
+          }}
+          className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-on-surface-variant hover:bg-white/30 rounded-lg transition-all"
+        >
           <Settings className="w-5 h-5" />
           设置
-        </a>
+        </button>
       </div>
     </aside>
   );

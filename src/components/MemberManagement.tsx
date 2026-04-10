@@ -13,7 +13,7 @@ export default function MemberManagement() {
 
   const selectedKB = state.knowledgeBases.find(kb => kb.id === state.selectedKBId);
 
-  const handleInvite = (email: string, role: Role) => {
+  const handleInvite = (email: string, role: Role, reason: string) => {
     if (!selectedKB) return;
     const newMember: Member = {
       id: `m-${Date.now()}`,
@@ -23,6 +23,8 @@ export default function MemberManagement() {
       role,
       lastActive: '刚刚',
     };
+    // In a real app, we would send the reason along with the invitation email
+    console.log(`Inviting ${email} as ${role} with reason: ${reason}`);
     updateKBMembers(selectedKB.id, [...selectedKB.members, newMember]);
   };
 
@@ -147,13 +149,19 @@ export default function MemberManagement() {
                   )}
                 </div>
                 <div className="col-span-3 text-sm text-on-surface-variant/60">{member.lastActive}</div>
-                <div className="col-span-1 text-right">
+                <div className="col-span-1 text-right flex justify-end">
                   <button 
                     onClick={() => removeMember(selectedKB.id, member.id)}
-                    className="text-on-surface-variant/40 hover:text-error transition-colors p-1"
+                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-all text-xs font-bold ${
+                      member.role === 'OWNER' 
+                        ? 'text-on-surface-variant/20 cursor-not-allowed' 
+                        : 'text-on-surface-variant hover:text-error hover:bg-error-container/20 bg-surface-container-low hover:shadow-sm'
+                    }`}
                     disabled={member.role === 'OWNER'}
+                    title={member.role === 'OWNER' ? "无法移除所有者" : "移除成员"}
                   >
-                    {member.role === 'OWNER' ? <Trash2 className="w-4 h-4 opacity-20" /> : <MinusCircle className="w-4 h-4" />}
+                    {member.role === 'OWNER' ? <Trash2 className="w-4 h-4" /> : <MinusCircle className="w-4 h-4" />}
+                    <span className="hidden xl:inline">移除</span>
                   </button>
                 </div>
               </motion.div>

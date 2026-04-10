@@ -28,11 +28,12 @@ export interface KnowledgeBase {
   createdAt: string;
 }
 
-export type ManagementTab = 'info' | 'members' | 'permissions' | 'export' | 'audit';
+export type ManagementTab = 'docs' | 'info' | 'members' | 'permissions' | 'export' | 'audit';
 
 export interface AppState {
   knowledgeBases: KnowledgeBase[];
   selectedKBId: string | null;
-  view: 'workbench' | 'management';
+  view: 'workbench' | 'management' | 'trash' | 'editor';
   managementTab: ManagementTab;
+  currentDocTitle?: string;
 }

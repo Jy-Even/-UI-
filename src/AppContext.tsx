@@ -3,15 +3,23 @@ import { KnowledgeBase, Member, AppState, AccessLevel, PermissionSettings, Role,
 
 interface AppContextType {
   state: AppState;
+  isCreateModalOpen: boolean;
+  setIsCreateModalOpen: (isOpen: boolean) => void;
+  isCreateDocModalOpen: boolean;
+  setIsCreateDocModalOpen: (isOpen: boolean) => void;
+  isTemplateGalleryOpen: boolean;
+  setIsTemplateGalleryOpen: (isOpen: boolean) => void;
   createKB: (name: string, description: string, access: AccessLevel) => void;
   selectKB: (id: string) => void;
-  setView: (view: 'workbench' | 'management') => void;
+  setView: (view: 'workbench' | 'management' | 'trash' | 'editor') => void;
   setManagementTab: (tab: ManagementTab) => void;
   updateKB: (kbId: string, updates: Partial<KnowledgeBase>) => void;
   deleteKB: (kbId: string) => void;
   updateKBMembers: (kbId: string, members: Member[]) => void;
   removeMember: (kbId: string, memberId: string) => void;
   updateMemberRole: (kbId: string, memberId: string, role: Role) => void;
+  openEditor: (title: string) => void;
+  closeEditor: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -53,6 +61,9 @@ const initialKBs: KnowledgeBase[] = [
 ];
 
 export function AppProvider({ children }: { children: ReactNode }) {
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isCreateDocModalOpen, setIsCreateDocModalOpen] = useState(false);
+  const [isTemplateGalleryOpen, setIsTemplateGalleryOpen] = useState(false);
   const [state, setState] = useState<AppState>({
     knowledgeBases: initialKBs,
     selectedKBId: 'kb-1',
@@ -88,7 +99,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setState(prev => ({ ...prev, selectedKBId: id }));
   };
 
-  const setView = (view: 'workbench' | 'management') => {
+  const setView = (view: 'workbench' | 'management' | 'trash' | 'editor') => {
     setState(prev => ({ ...prev, view }));
   };
 
@@ -147,9 +158,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }));
   };
 
+  const openEditor = (title: string) => {
+    setState(prev => ({ ...prev, view: 'editor', currentDocTitle: title }));
+  };
+
+  const closeEditor = () => {
+    setState(prev => ({ ...prev, view: 'workbench', currentDocTitle: undefined }));
+  };
+
   return (
     <AppContext.Provider value={{ 
       state, 
+      isCreateModalOpen,
+      setIsCreateModalOpen,
+      isCreateDocModalOpen,
+      setIsCreateDocModalOpen,
+      isTemplateGalleryOpen,
+      setIsTemplateGalleryOpen,
       createKB, 
       selectKB, 
       setView, 
@@ -158,7 +183,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       deleteKB,
       updateKBMembers, 
       removeMember,
-      updateMemberRole
+      updateMemberRole,
+      openEditor,
+      closeEditor
     }}>
       {children}
     </AppContext.Provider>

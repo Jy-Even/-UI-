@@ -1,4 +1,4 @@
-import { X, Mail, Shield, Send } from 'lucide-react';
+import { X, Mail, Shield, Send, MessageSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useState } from 'react';
 import { Role } from '../types';
@@ -6,17 +6,19 @@ import { Role } from '../types';
 interface InviteMemberModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onInvite: (email: string, role: Role) => void;
+  onInvite: (email: string, role: Role, reason: string) => void;
 }
 
 export default function InviteMemberModal({ isOpen, onClose, onInvite }: InviteMemberModalProps) {
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<Role>('MEMBER');
+  const [reason, setReason] = useState('');
 
   const handleInvite = () => {
     if (!email.trim()) return;
-    onInvite(email, role);
+    onInvite(email, role, reason);
     setEmail('');
+    setReason('');
     onClose();
   };
 
@@ -83,6 +85,19 @@ export default function InviteMemberModal({ isOpen, onClose, onInvite }: InviteM
                     </button>
                   ))}
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-on-surface flex items-center gap-2">
+                  <MessageSquare className="w-4 h-4 text-on-surface-variant" />
+                  邀请理由 <span className="text-on-surface-variant/40 font-normal">(可选)</span>
+                </label>
+                <textarea 
+                  className="w-full bg-surface-container-low border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary-container/20 outline-none transition-all min-h-[80px] resize-none" 
+                  placeholder="说点什么来邀请Ta加入..." 
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                />
               </div>
 
               <div className="pt-4">
