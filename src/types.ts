@@ -36,4 +36,5 @@ export interface AppState {
   view: 'workbench' | 'management' | 'trash' | 'editor';
   managementTab: ManagementTab;
   currentDocTitle?: string;
+  currentDocContent?: string;
 }

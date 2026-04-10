@@ -1,9 +1,10 @@
-import { FileText, Clock, Star, Eye, History, Trash2, Plus, Search } from 'lucide-react';
+import { FileText, Clock, Star, Eye, History, Trash2, Plus, Search, Download } from 'lucide-react';
 import { useState } from 'react';
 import { motion } from 'motion/react';
 import { useApp } from '../AppContext';
 import DocumentPreviewModal from './DocumentPreviewModal';
 import VersionHistoryModal from './VersionHistoryModal';
+import ExportDocModal from './ExportDocModal';
 
 export default function DocumentManagement() {
   const { state, openEditor, setIsCreateDocModalOpen } = useApp();
@@ -12,14 +13,15 @@ export default function DocumentManagement() {
   const [searchQuery, setSearchQuery] = useState('');
   const [previewDoc, setPreviewDoc] = useState<{ isOpen: boolean; title: string }>({ isOpen: false, title: '' });
   const [historyDoc, setHistoryDoc] = useState<{ isOpen: boolean; title: string }>({ isOpen: false, title: '' });
+  const [exportDoc, setExportDoc] = useState<{ isOpen: boolean; title: string; type: 'doc' | 'sheet' | 'board' }>({ isOpen: false, title: '', type: 'doc' });
 
   // Mock documents data for the current KB
   const documents = [
-    { id: 'doc-1', title: '2024 年度战略规划白皮书 v3.0', author: '林知非', updatedAt: '2 小时前', isStarred: true },
-    { id: 'doc-2', title: '产品设计规范 - 核心组件库', author: '陈子珊', updatedAt: '昨天 18:30', isStarred: true },
-    { id: 'doc-3', title: 'Q3 季度研发团队 OKR 目标对齐', author: '林知非', updatedAt: '2024-03-15', isStarred: false },
-    { id: 'doc-4', title: '新员工入职指南与系统配置说明', author: 'HR 团队', updatedAt: '2024-03-10', isStarred: false },
-    { id: 'doc-5', title: '竞品分析报告：Q1 市场动态', author: '市场部', updatedAt: '2024-03-05', isStarred: false },
+    { id: 'doc-1', title: '2024 年度战略规划白皮书 v3.0', author: '林知非', updatedAt: '2 小时前', isStarred: true, type: 'doc' as const },
+    { id: 'doc-2', title: '产品设计规范 - 核心组件库', author: '陈子珊', updatedAt: '昨天 18:30', isStarred: true, type: 'board' as const },
+    { id: 'doc-3', title: 'Q3 季度研发团队 OKR 目标对齐', author: '林知非', updatedAt: '2024-03-15', isStarred: false, type: 'sheet' as const },
+    { id: 'doc-4', title: '新员工入职指南与系统配置说明', author: 'HR 团队', updatedAt: '2024-03-10', isStarred: false, type: 'doc' as const },
+    { id: 'doc-5', title: '竞品分析报告：Q1 市场动态', author: '市场部', updatedAt: '2024-03-05', isStarred: false, type: 'doc' as const },
   ];
 
   const filteredDocs = documents.filter(doc => 
@@ -35,6 +37,11 @@ export default function DocumentManagement() {
   const openHistory = (title: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setHistoryDoc({ isOpen: true, title });
+  };
+
+  const openExport = (title: string, type: 'doc' | 'sheet' | 'board', e: React.MouseEvent) => {
+    e.stopPropagation();
+    setExportDoc({ isOpen: true, title, type });
   };
 
   if (!selectedKB) return null;
@@ -129,6 +136,13 @@ export default function DocumentManagement() {
                         >
                           <History className="w-4 h-4" />
                         </button>
+                        <button 
+                          onClick={(e) => openExport(doc.title, doc.type, e)}
+                          className="p-2 text-on-surface-variant hover:text-secondary hover:bg-secondary/10 rounded-lg transition-colors"
+                          title="导出文档"
+                        >
+                          <Download className="w-4 h-4" />
+                        </button>
                         <div className="w-px h-4 bg-outline-variant/20 mx-1"></div>
                         <button 
                           className="p-2 text-on-surface-variant hover:text-error hover:bg-error-container/20 rounded-lg transition-colors"
@@ -166,6 +180,13 @@ export default function DocumentManagement() {
         isOpen={historyDoc.isOpen}
         onClose={() => setHistoryDoc({ ...historyDoc, isOpen: false })}
         documentTitle={historyDoc.title}
+      />
+
+      <ExportDocModal
+        isOpen={exportDoc.isOpen}
+        onClose={() => setExportDoc({ ...exportDoc, isOpen: false })}
+        documentTitle={exportDoc.title}
+        documentType={exportDoc.type}
       />
     </section>
   );

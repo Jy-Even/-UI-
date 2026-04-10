@@ -18,7 +18,7 @@ interface AppContextType {
   updateKBMembers: (kbId: string, members: Member[]) => void;
   removeMember: (kbId: string, memberId: string) => void;
   updateMemberRole: (kbId: string, memberId: string, role: Role) => void;
-  openEditor: (title: string) => void;
+  openEditor: (title: string, content?: string) => void;
   closeEditor: () => void;
 }
 
@@ -158,12 +158,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }));
   };
 
-  const openEditor = (title: string) => {
-    setState(prev => ({ ...prev, view: 'editor', currentDocTitle: title }));
+  const openEditor = (title: string, content?: string) => {
+    setState(prev => ({ ...prev, view: 'editor', currentDocTitle: title, currentDocContent: content }));
   };
 
   const closeEditor = () => {
-    setState(prev => ({ ...prev, view: 'workbench', currentDocTitle: undefined }));
+    setState(prev => ({ ...prev, view: 'workbench', currentDocTitle: undefined, currentDocContent: undefined }));
   };
 
   return (
