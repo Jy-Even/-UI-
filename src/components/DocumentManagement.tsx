@@ -1,4 +1,4 @@
-import { FileText, Clock, Star, Eye, History, Trash2, Plus, Search, Download } from 'lucide-react';
+import { FileText, Clock, Star, Eye, History, Trash2, Plus, Search, Download, X } from 'lucide-react';
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { useApp } from '../AppContext';
@@ -58,15 +58,24 @@ export default function DocumentManagement() {
           <p className="text-sm text-gray-500 mt-1">管理当前知识库中的所有文档、查看版本历史或进行清理</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <div className="relative">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <div className="relative group">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 group-focus-within:text-[#141414] transition-colors" />
             <input 
-              className="bg-white border border-gray-100 text-sm rounded-xl pl-10 pr-4 py-2.5 w-64 focus:ring-4 focus:ring-gray-100 focus:border-gray-200 outline-none transition-all" 
+              className="bg-white border border-gray-100 text-sm rounded-xl pl-10 pr-10 py-2.5 w-64 focus:ring-4 focus:ring-gray-100 focus:border-gray-200 outline-none transition-all" 
               placeholder="搜索文档标题或作者..." 
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
+            {searchQuery && (
+              <button 
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600 transition-all"
+                title="清除搜索"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
           <button 
             onClick={() => setIsCreateDocModalOpen(true)}
@@ -135,12 +144,16 @@ export default function DocumentManagement() {
                   <td colSpan={4}>
                     <EmptyState 
                       icon={Search}
-                      title="未找到匹配的文档"
-                      description="请尝试更换搜索关键词，或者检查拼写是否正确。"
-                      action={{
+                      title={searchQuery ? "未找到匹配的文档" : "暂无文档"}
+                      description={searchQuery ? `未找到与 "${searchQuery}" 相关的文档，请尝试更换关键词。` : "当前知识库中还没有任何文档，点击上方按钮开始创建。"}
+                      action={searchQuery ? {
                         label: "清除搜索",
                         onClick: () => setSearchQuery(''),
-                        icon: Trash2
+                        icon: X
+                      } : {
+                        label: "新建文档",
+                        onClick: () => setIsCreateDocModalOpen(true),
+                        icon: Plus
                       }}
                     />
                   </td>

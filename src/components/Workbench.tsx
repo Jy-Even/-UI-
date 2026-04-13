@@ -25,11 +25,6 @@ export default function Workbench() {
 
   return (
     <div className="p-12 max-w-7xl mx-auto">
-      <header className="mb-16">
-        <h1 className="text-5xl font-extrabold text-gray-900 tracking-tight mb-4">工作台</h1>
-        <p className="text-gray-500 text-xl font-medium">欢迎回来，开始您的知识共创之旅。</p>
-      </header>
-
       <section className="mb-16">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">

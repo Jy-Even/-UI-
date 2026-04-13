@@ -149,41 +149,58 @@ export default function DocumentPreviewModal({ isOpen, onClose, documentTitle }:
               </div>
 
               {/* ToC Sidebar */}
-              {isTocOpen && (
-                <div className="w-64 border-l border-outline-variant/10 bg-surface-container-lowest flex flex-col shrink-0">
-                  <div className="p-4 border-b border-outline-variant/5 font-bold text-sm text-on-surface flex items-center gap-2">
-                    <ListTree className="w-4 h-4" />
-                    大纲目录
-                  </div>
-                  <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-                    {toc.length > 0 ? (
-                      <ul className="space-y-2">
-                        {toc.map((item) => (
-                          <li 
-                            key={item.id} 
-                            className={`text-sm cursor-pointer hover:text-primary-container transition-colors line-clamp-1 ${
-                              item.level === 1 ? 'font-bold text-on-surface' : 
-                              item.level === 2 ? 'pl-4 text-on-surface-variant' : 
-                              'pl-8 text-on-surface-variant/80 text-xs'
-                            }`}
-                            onClick={() => scrollToHeading(item.id)}
-                            title={item.text}
-                          >
-                            {item.text}
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="text-xs text-on-surface-variant/40 text-center mt-10">暂无目录结构</p>
-                    )}
-                  </div>
-                  {/* Stats Footer */}
-                  <div className="p-4 border-t border-outline-variant/5 bg-surface-container-lowest/50 text-xs text-on-surface-variant flex justify-between items-center">
-                    <span>字数：{stats.words}</span>
-                    <span>页数：~{stats.pages}</span>
-                  </div>
-                </div>
-              )}
+              <AnimatePresence>
+                {isTocOpen && (
+                  <motion.div 
+                    initial={{ width: 0, opacity: 0 }}
+                    animate={{ width: 256, opacity: 1 }}
+                    exit={{ width: 0, opacity: 0 }}
+                    transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                    className="border-l border-outline-variant/10 bg-surface-container-lowest flex flex-col shrink-0 overflow-hidden"
+                  >
+                    <div className="p-4 border-b border-outline-variant/5 font-bold text-sm text-on-surface flex items-center gap-2">
+                      <ListTree className="w-4 h-4" />
+                      大纲目录
+                    </div>
+                    <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+                      {toc.length > 0 ? (
+                        <ul className="space-y-1">
+                          {toc.map((item) => (
+                            <li 
+                              key={item.id} 
+                              className={`text-sm cursor-pointer hover:bg-surface-container-low rounded-lg p-2 transition-all line-clamp-2 ${
+                                item.level === 1 ? 'font-bold text-on-surface' : 
+                                item.level === 2 ? 'pl-4 text-on-surface-variant' : 
+                                'pl-8 text-on-surface-variant/80 text-xs'
+                              }`}
+                              onClick={() => scrollToHeading(item.id)}
+                              title={item.text}
+                            >
+                              {item.text}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <div className="flex flex-col items-center justify-center mt-20 text-on-surface-variant/30">
+                          <ListTree className="w-8 h-8 mb-2 opacity-20" />
+                          <p className="text-xs font-medium">暂无目录结构</p>
+                        </div>
+                      )}
+                    </div>
+                    {/* Stats Footer */}
+                    <div className="p-4 border-t border-outline-variant/5 bg-surface-container-low/30 text-[10px] font-bold text-on-surface-variant/40 uppercase tracking-widest flex justify-between items-center">
+                      <div className="flex items-center gap-1">
+                        <FileText className="w-3 h-3" />
+                        {stats.words} 字
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <ListTree className="w-3 h-3" />
+                        约 {stats.pages} 页
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </motion.div>
         </div>
