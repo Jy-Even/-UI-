@@ -1,6 +1,7 @@
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Trash2, RotateCcw, Search, FileText, FolderHeart, AlertCircle } from 'lucide-react';
 import { useState } from 'react';
+import EmptyState from './common/EmptyState';
 
 export default function Trash() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -32,37 +33,39 @@ export default function Trash() {
     <div className="p-10 max-w-6xl mx-auto">
       <header className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-4xl font-extrabold font-headline text-on-surface tracking-tight mb-4 flex items-center gap-3">
-            <Trash2 className="w-8 h-8 text-on-surface-variant" />
+          <h1 className="text-4xl font-bold text-gray-900 tracking-tight mb-4 flex items-center gap-4">
+            <div className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center">
+              <Trash2 className="w-6 h-6 text-gray-600" />
+            </div>
             回收站
           </h1>
-          <p className="text-on-surface-variant/60 text-lg">
+          <p className="text-gray-500 text-lg max-w-2xl">
             找回已删除的文档或知识库。项目将在放入回收站 30 天后自动永久删除。
           </p>
         </div>
         <button 
           onClick={handleEmptyTrash}
           disabled={deletedItems.length === 0}
-          className="px-6 py-2.5 bg-error-container/20 text-error font-bold rounded-xl hover:bg-error-container/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          className="px-6 py-3 bg-red-50 text-red-600 font-bold rounded-xl hover:bg-red-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
         >
           <AlertCircle className="w-4 h-4" />
           清空回收站
         </button>
       </header>
 
-      <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/5 shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-outline-variant/5 flex items-center justify-between bg-surface-container-lowest/50">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="p-5 border-b border-gray-50 flex items-center justify-between bg-gray-50/30">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/50 w-4 h-4" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
             <input 
-              className="bg-surface-container border border-outline-variant/10 text-sm rounded-full pl-9 pr-4 py-2 w-64 focus:ring-2 focus:ring-primary-container/20 outline-none transition-all" 
+              className="bg-white border border-gray-100 text-sm rounded-xl pl-10 pr-4 py-2.5 w-72 focus:ring-4 focus:ring-gray-100 focus:border-gray-200 outline-none transition-all" 
               placeholder="搜索已删除的项目..." 
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <div className="text-sm text-on-surface-variant/60 font-medium">
+          <div className="text-sm text-gray-400 font-medium">
             共 {filteredItems.length} 个项目
           </div>
         </div>
@@ -70,14 +73,14 @@ export default function Trash() {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-outline-variant/5 bg-surface-container-lowest/50">
-                <th className="px-6 py-4 text-xs font-bold text-on-surface-variant/60 uppercase tracking-wider w-2/5">名称</th>
-                <th className="px-6 py-4 text-xs font-bold text-on-surface-variant/60 uppercase tracking-wider">所属位置</th>
-                <th className="px-6 py-4 text-xs font-bold text-on-surface-variant/60 uppercase tracking-wider">删除时间</th>
-                <th className="px-6 py-4 text-xs font-bold text-on-surface-variant/60 uppercase tracking-wider text-right">操作</th>
+              <tr className="border-b border-gray-50 bg-gray-50/10">
+                <th className="px-6 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider w-2/5">名称</th>
+                <th className="px-6 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider">所属位置</th>
+                <th className="px-6 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider">删除时间</th>
+                <th className="px-6 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider text-right">操作</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-outline-variant/5">
+            <tbody className="divide-y divide-gray-50">
               {filteredItems.length > 0 ? (
                 filteredItems.map((item) => (
                   <motion.tr 
@@ -85,39 +88,39 @@ export default function Trash() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="group hover:bg-surface-container-low/50 transition-colors"
+                    className="group hover:bg-gray-50/50 transition-colors"
                   >
                     <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                          item.type === 'kb' ? 'bg-primary-container/10 text-primary-container' : 'bg-surface-container text-on-surface-variant/60'
+                      <div className="flex items-center gap-4">
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                          item.type === 'kb' ? 'bg-indigo-50 text-indigo-500' : 'bg-gray-50 text-gray-400'
                         }`}>
-                          {item.type === 'kb' ? <FolderHeart className="w-4 h-4" /> : <FileText className="w-4 h-4" />}
+                          {item.type === 'kb' ? <FolderHeart className="w-5 h-5" /> : <FileText className="w-5 h-5" />}
                         </div>
                         <div>
-                          <div className="font-semibold text-sm text-on-surface line-through opacity-70">{item.title}</div>
-                          <div className="text-[10px] text-on-surface-variant/40 uppercase mt-0.5">{item.size}</div>
+                          <div className="font-semibold text-sm text-gray-900 line-through opacity-50">{item.title}</div>
+                          <div className="text-[10px] text-gray-400 font-bold uppercase mt-0.5 tracking-wider">{item.size}</div>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="text-sm text-on-surface-variant/80">{item.kbName}</span>
+                      <span className="text-sm text-gray-600 font-medium">{item.kbName}</span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="text-sm text-error/80">{item.deletedAt}</span>
+                      <span className="text-sm text-red-500 font-medium">{item.deletedAt}</span>
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button 
                           onClick={() => handleRestore(item.id)}
-                          className="px-3 py-1.5 text-xs font-bold text-primary-container bg-primary-container/10 hover:bg-primary-container/20 rounded-lg transition-colors flex items-center gap-1"
+                          className="px-4 py-2 text-xs font-bold text-white bg-[#141414] hover:bg-gray-800 rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-black/5"
                         >
                           <RotateCcw className="w-3.5 h-3.5" />
                           恢复
                         </button>
                         <button 
                           onClick={() => handlePermanentDelete(item.id)}
-                          className="p-1.5 text-on-surface-variant hover:text-error hover:bg-error-container/20 rounded-lg transition-colors"
+                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
                           title="彻底删除"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -128,12 +131,12 @@ export default function Trash() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={4} className="px-6 py-16 text-center">
-                    <div className="inline-flex w-16 h-16 rounded-2xl bg-surface-container items-center justify-center text-on-surface-variant/40 mb-4">
-                      <Trash2 className="w-8 h-8" />
-                    </div>
-                    <h3 className="text-sm font-bold text-on-surface mb-1">回收站为空</h3>
-                    <p className="text-xs text-on-surface-variant/60">没有找到任何已删除的项目</p>
+                  <td colSpan={4}>
+                    <EmptyState 
+                      icon={Trash2}
+                      title="回收站为空"
+                      description="没有找到任何已删除的项目。这里会暂时保存您最近 30 天内删除的内容。"
+                    />
                   </td>
                 </tr>
               )}

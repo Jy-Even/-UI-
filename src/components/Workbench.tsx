@@ -1,14 +1,12 @@
 import { motion } from 'motion/react';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useApp } from '../AppContext';
-import { FolderHeart, Clock, Star, Plus, Eye, History } from 'lucide-react';
+import { FolderHeart, Clock, Star, Plus, Eye, History, ChevronRight, FileText } from 'lucide-react';
 import DocumentPreviewModal from './DocumentPreviewModal';
-import VersionHistoryModal from './VersionHistoryModal';
 
 export default function Workbench() {
-  const { state, selectKB, setView, setIsCreateModalOpen, openEditor } = useApp();
+  const { state, selectKB, setView, setIsCreateModalOpen, openEditor, openVersionHistory } = useApp();
   const [previewDoc, setPreviewDoc] = useState<{ isOpen: boolean; title: string }>({ isOpen: false, title: '' });
-  const [historyDoc, setHistoryDoc] = useState<{ isOpen: boolean; title: string }>({ isOpen: false, title: '' });
 
   const handleKBClick = (id: string) => {
     selectKB(id);
@@ -22,133 +20,134 @@ export default function Workbench() {
 
   const openHistory = (title: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    setHistoryDoc({ isOpen: true, title });
+    openVersionHistory(title);
   };
 
   return (
-    <div className="p-10 max-w-6xl mx-auto">
-      <header className="mb-12">
-        <h1 className="text-4xl font-extrabold font-headline text-on-surface tracking-tight mb-4">工作台</h1>
-        <p className="text-on-surface-variant/60 text-lg">欢迎回来，开始您的知识共创之旅。</p>
+    <div className="p-12 max-w-7xl mx-auto">
+      <header className="mb-16">
+        <h1 className="text-5xl font-extrabold text-gray-900 tracking-tight mb-4">工作台</h1>
+        <p className="text-gray-500 text-xl font-medium">欢迎回来，开始您的知识共创之旅。</p>
       </header>
 
-      <section className="mb-12">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold font-headline text-on-surface">我的知识库</h2>
-          <button className="text-sm font-bold text-primary-container hover:underline">查看全部</button>
+      <section className="mb-16">
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-900">
+              <FolderHeart className="w-5 h-5" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900">我的知识库</h2>
+          </div>
+          <button className="text-sm font-bold text-gray-400 hover:text-gray-900 transition-colors flex items-center gap-1 group">
+            查看全部
+            <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+          </button>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {state.knowledgeBases.map((kb) => (
             <motion.div
               key={kb.id}
-              whileHover={{ y: -4 }}
+              whileHover={{ y: -8 }}
               onClick={() => handleKBClick(kb.id)}
-              className="bg-surface-container-lowest rounded-2xl p-6 border border-outline-variant/5 shadow-sm hover:shadow-md transition-all cursor-pointer group"
+              className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm hover:shadow-2xl hover:shadow-black/5 transition-all cursor-pointer group relative overflow-hidden"
             >
-              <div className="w-12 h-12 bg-primary-container/10 rounded-xl flex items-center justify-center text-primary-container mb-4 group-hover:bg-primary-container group-hover:text-white transition-colors">
-                <FolderHeart className="w-6 h-6" />
+              <div className="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-400 mb-6 group-hover:bg-[#141414] group-hover:text-white transition-all duration-500">
+                <FolderHeart className="w-7 h-7" />
               </div>
-              <h3 className="font-bold text-lg mb-2 group-hover:text-primary-container transition-colors">{kb.name}</h3>
-              <p className="text-sm text-on-surface-variant/60 line-clamp-2 mb-4">{kb.description}</p>
-              <div className="flex items-center justify-between text-[10px] text-on-surface-variant/40 uppercase tracking-widest font-bold">
-                <span>{kb.members.length} 位成员</span>
-                <span>{kb.createdAt}</span>
+              <h3 className="font-bold text-xl mb-3 text-gray-900 group-hover:text-black transition-colors">{kb.name}</h3>
+              <p className="text-sm text-gray-500 line-clamp-2 mb-8 min-h-[40px] leading-relaxed font-medium">{kb.description}</p>
+              <div className="flex items-center justify-between pt-6 border-t border-gray-50">
+                <div className="flex items-center gap-3">
+                  <div className="flex -space-x-2">
+                    {[1, 2, 3].map(i => (
+                      <div key={i} className="w-6 h-6 rounded-full border-2 border-white bg-gray-100 flex items-center justify-center text-[10px] font-bold text-gray-500">
+                        {String.fromCharCode(64 + i)}
+                      </div>
+                    ))}
+                  </div>
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{kb.members.length} MEMBERS</span>
+                </div>
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{kb.createdAt}</span>
               </div>
             </motion.div>
           ))}
           <motion.div
             whileHover={{ scale: 0.98 }}
             onClick={() => setIsCreateModalOpen(true)}
-            className="bg-surface-container-low rounded-2xl p-6 border-2 border-dashed border-outline-variant/20 flex flex-col items-center justify-center text-on-surface-variant/40 hover:border-primary-container/40 hover:text-primary-container/60 transition-all cursor-pointer group"
+            className="bg-gray-50/50 rounded-3xl p-8 border-2 border-dashed border-gray-200 flex flex-col items-center justify-center text-gray-400 hover:bg-white hover:border-gray-900 hover:text-gray-900 transition-all cursor-pointer group"
           >
-            <Plus className="w-8 h-8 mb-2" />
-            <span className="font-bold text-sm">创建新知识库</span>
+            <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mb-4 group-hover:bg-gray-900 group-hover:text-white transition-all">
+              <Plus className="w-7 h-7" />
+            </div>
+            <span className="font-bold text-sm uppercase tracking-widest">创建新知识库</span>
           </motion.div>
         </div>
       </section>
 
-      <div className="grid md:grid-cols-2 gap-10">
+      <div className="grid lg:grid-cols-2 gap-12">
         <section>
-          <h2 className="text-xl font-bold font-headline text-on-surface mb-6 flex items-center gap-2">
-            <Clock className="w-5 h-5 text-tertiary" />
-            最近编辑
-          </h2>
-          <div className="space-y-3">
+          <div className="flex items-center gap-4 mb-8">
+            <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-900">
+              <Clock className="w-5 h-5" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900">最近编辑</h2>
+          </div>
+          <div className="space-y-4">
             {[1, 2, 3].map((i) => {
               const title = `2024 年度战略规划白皮书 v${i}.0`;
               return (
-                <div 
+                <motion.div 
                   key={i} 
+                  whileHover={{ x: 8 }}
                   onClick={() => openEditor(title)}
-                  className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant/5 flex items-center gap-4 hover:bg-surface-container-low transition-colors cursor-pointer group"
+                  className="bg-white p-5 rounded-2xl border border-gray-100 flex items-center gap-5 hover:shadow-xl hover:shadow-black/5 transition-all cursor-pointer group"
                 >
-                  <div className="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-on-surface-variant/40">
-                    <Clock className="w-5 h-5" />
+                  <div className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-[#141414] group-hover:text-white transition-all">
+                    <FileText className="w-6 h-6" />
                   </div>
-                  <div className="flex-1">
-                    <div className="font-semibold text-sm group-hover:text-primary-container transition-colors">{title}</div>
-                    <div className="text-xs text-on-surface-variant/40">更新于 {i} 小时前</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-bold text-base text-gray-900 group-hover:text-black transition-colors truncate">{title}</div>
+                    <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">UPDATED {i} HOURS AGO</div>
                   </div>
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                    <button 
-                      onClick={(e) => openPreview(title, e)}
-                      className="p-2 text-on-surface-variant hover:text-primary-container hover:bg-primary-container/10 rounded-lg transition-all"
-                      title="预览文档"
-                    >
-                      <Eye className="w-4 h-4" />
-                    </button>
-                    <button 
-                      onClick={(e) => openHistory(title, e)}
-                      className="p-2 text-on-surface-variant hover:text-tertiary hover:bg-tertiary/10 rounded-lg transition-all"
-                      title="版本历史"
-                    >
-                      <History className="w-4 h-4" />
-                    </button>
+                  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                    <ActionButton icon={Eye} onClick={(e) => openPreview(title, e)} title="预览" />
+                    <ActionButton icon={History} onClick={(e) => openHistory(title, e)} title="历史" />
                   </div>
-                </div>
+                </motion.div>
               );
             })}
           </div>
         </section>
 
         <section>
-          <h2 className="text-xl font-bold font-headline text-on-surface mb-6 flex items-center gap-2">
-            <Star className="w-5 h-5 text-secondary" />
-            收藏夹
-          </h2>
-          <div className="space-y-3">
+          <div className="flex items-center gap-4 mb-8">
+            <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-500">
+              <Star className="w-5 h-5" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900">收藏夹</h2>
+          </div>
+          <div className="space-y-4">
             {[1, 2].map((i) => {
               const title = i === 1 ? '产品设计规范 - 核心组件库' : 'Q3 季度研发团队 OKR 目标对齐';
               return (
-                <div 
+                <motion.div 
                   key={i} 
+                  whileHover={{ x: 8 }}
                   onClick={() => openEditor(title)}
-                  className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant/5 flex items-center gap-4 hover:bg-surface-container-low transition-colors cursor-pointer group"
+                  className="bg-white p-5 rounded-2xl border border-gray-100 flex items-center gap-5 hover:shadow-xl hover:shadow-black/5 transition-all cursor-pointer group"
                 >
-                  <div className="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center text-secondary">
-                    <Star className="w-5 h-5 fill-current" />
+                  <div className="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center text-amber-500 group-hover:bg-amber-500 group-hover:text-white transition-all duration-500">
+                    <Star className="w-6 h-6 fill-current" />
                   </div>
-                  <div className="flex-1">
-                    <div className="font-semibold text-sm group-hover:text-primary-container transition-colors">{title}</div>
-                    <div className="text-xs text-on-surface-variant/40">收藏于 2024-03-1{i}</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-bold text-base text-gray-900 group-hover:text-black transition-colors truncate">{title}</div>
+                    <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">STARRED ON 2024-03-1{i}</div>
                   </div>
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                    <button 
-                      onClick={(e) => openPreview(title, e)}
-                      className="p-2 text-on-surface-variant hover:text-primary-container hover:bg-primary-container/10 rounded-lg transition-all"
-                      title="预览文档"
-                    >
-                      <Eye className="w-4 h-4" />
-                    </button>
-                    <button 
-                      onClick={(e) => openHistory(title, e)}
-                      className="p-2 text-on-surface-variant hover:text-tertiary hover:bg-tertiary/10 rounded-lg transition-all"
-                      title="版本历史"
-                    >
-                      <History className="w-4 h-4" />
-                    </button>
+                  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                    <ActionButton icon={Eye} onClick={(e) => openPreview(title, e)} title="预览" />
+                    <ActionButton icon={History} onClick={(e) => openHistory(title, e)} title="历史" />
                   </div>
-                </div>
+                </motion.div>
               );
             })}
           </div>
@@ -160,12 +159,18 @@ export default function Workbench() {
         onClose={() => setPreviewDoc({ ...previewDoc, isOpen: false })} 
         documentTitle={previewDoc.title} 
       />
-      
-      <VersionHistoryModal
-        isOpen={historyDoc.isOpen}
-        onClose={() => setHistoryDoc({ ...historyDoc, isOpen: false })}
-        documentTitle={historyDoc.title}
-      />
     </div>
+  );
+}
+
+function ActionButton({ icon: Icon, onClick, title }: { icon: any; onClick: (e: any) => void; title: string }) {
+  return (
+    <button 
+      onClick={onClick}
+      className="p-2.5 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-all"
+      title={title}
+    >
+      <Icon className="w-4 h-4" />
+    </button>
   );
 }

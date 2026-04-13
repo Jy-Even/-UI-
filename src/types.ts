@@ -33,7 +33,8 @@ export type ManagementTab = 'docs' | 'info' | 'members' | 'permissions' | 'expor
 export interface AppState {
   knowledgeBases: KnowledgeBase[];
   selectedKBId: string | null;
-  view: 'workbench' | 'management' | 'trash' | 'editor';
+  view: 'workbench' | 'management' | 'trash' | 'editor' | 'version-history';
+  lastView?: 'workbench' | 'management' | 'trash' | 'editor';
   managementTab: ManagementTab;
   currentDocTitle?: string;
   currentDocContent?: string;

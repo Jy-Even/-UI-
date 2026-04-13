@@ -11,7 +11,7 @@ interface AppContextType {
   setIsTemplateGalleryOpen: (isOpen: boolean) => void;
   createKB: (name: string, description: string, access: AccessLevel) => void;
   selectKB: (id: string) => void;
-  setView: (view: 'workbench' | 'management' | 'trash' | 'editor') => void;
+  setView: (view: 'workbench' | 'management' | 'trash' | 'editor' | 'version-history') => void;
   setManagementTab: (tab: ManagementTab) => void;
   updateKB: (kbId: string, updates: Partial<KnowledgeBase>) => void;
   deleteKB: (kbId: string) => void;
@@ -20,6 +20,7 @@ interface AppContextType {
   updateMemberRole: (kbId: string, memberId: string, role: Role) => void;
   openEditor: (title: string, content?: string) => void;
   closeEditor: () => void;
+  openVersionHistory: (title: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -99,8 +100,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setState(prev => ({ ...prev, selectedKBId: id }));
   };
 
-  const setView = (view: 'workbench' | 'management' | 'trash' | 'editor') => {
-    setState(prev => ({ ...prev, view }));
+  const setView = (view: 'workbench' | 'management' | 'trash' | 'editor' | 'version-history') => {
+    setState(prev => ({ ...prev, lastView: prev.view !== 'version-history' ? prev.view as any : prev.lastView, view }));
   };
 
   const setManagementTab = (tab: ManagementTab) => {
@@ -166,6 +167,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setState(prev => ({ ...prev, view: 'workbench', currentDocTitle: undefined, currentDocContent: undefined }));
   };
 
+  const openVersionHistory = (title: string) => {
+    setState(prev => ({ ...prev, lastView: prev.view as any, view: 'version-history', currentDocTitle: title }));
+  };
+
   return (
     <AppContext.Provider value={{ 
       state, 
@@ -185,7 +190,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       removeMember,
       updateMemberRole,
       openEditor,
-      closeEditor
+      closeEditor,
+      openVersionHistory
     }}>
       {children}
     </AppContext.Provider>

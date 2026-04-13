@@ -4,6 +4,8 @@
  */
 
 import { useState } from 'react';
+import { Plus } from 'lucide-react';
+import { motion } from 'motion/react';
 import TopNav from './components/TopNav';
 import Sidebar from './components/Sidebar';
 import MemberManagement from './components/MemberManagement';
@@ -15,6 +17,7 @@ import Workbench from './components/Workbench';
 import DocumentManagement from './components/DocumentManagement';
 import Trash from './components/Trash';
 import DocumentEditor from './components/DocumentEditor';
+import VersionHistory from './components/VersionHistory';
 import CreateDocModal from './components/CreateDocModal';
 import TemplateGalleryModal from './components/TemplateGalleryModal';
 import { AppProvider, useApp } from './AppContext';
@@ -28,27 +31,36 @@ function AppContent() {
     return <DocumentEditor />;
   }
 
+  if (state.view === 'version-history') {
+    return (
+      <VersionHistory 
+        onBack={() => setView(state.lastView || 'workbench')} 
+        documentTitle={state.currentDocTitle || '未命名文档'} 
+      />
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-surface">
+    <div className="min-h-screen bg-[#F8F9FA]">
       <TopNav />
       
-      <div className="flex pt-14 h-screen overflow-hidden">
+      <div className="flex pt-16 h-screen overflow-hidden">
         <Sidebar onCreateNew={() => setIsCreateDocModalOpen(true)} />
         
-        <main className="flex-1 ml-[240px] overflow-y-auto bg-surface custom-scrollbar">
+        <main className="flex-1 ml-[260px] overflow-y-auto bg-[#F8F9FA] custom-scrollbar">
           {state.view === 'workbench' && <Workbench />}
           {state.view === 'trash' && <Trash />}
           {state.view === 'management' && (
-            <>
+            <div className="min-h-full flex flex-col">
               {/* Context Header & Top Tabs */}
-              <div className="bg-surface-container-lowest px-10 pt-8 pb-0 sticky top-0 z-40 border-b border-outline-variant/5">
-                <div className="mb-6">
-                  <nav className="flex text-xs text-on-surface-variant/40 gap-2 mb-2">
-                    <button onClick={() => setView('workbench')} className="hover:text-primary-container">我的空间</button>
-                    <span>/</span>
-                    <span>{selectedKB?.name}</span>
+              <div className="bg-white px-12 pt-10 pb-0 sticky top-0 z-40 border-b border-gray-100">
+                <div className="mb-8">
+                  <nav className="flex items-center text-xs font-bold text-gray-400 gap-2 mb-3 uppercase tracking-widest">
+                    <button onClick={() => setView('workbench')} className="hover:text-gray-900 transition-colors">我的空间</button>
+                    <span className="text-gray-200">/</span>
+                    <span className="text-gray-900">{selectedKB?.name}</span>
                   </nav>
-                  <h1 className="text-2xl font-extrabold font-headline text-on-surface tracking-tight">
+                  <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
                     {state.managementTab === 'docs' && '文档管理'}
                     {state.managementTab === 'info' && '信息设置'}
                     {state.managementTab === 'members' && '成员管理'}
@@ -58,26 +70,26 @@ function AppContent() {
                   </h1>
                 </div>
                 
-                <div className="flex gap-10">
+                <div className="flex gap-8">
                   <TabButton 
                     active={state.managementTab === 'docs'} 
                     onClick={() => setManagementTab('docs')}
-                    label="文档管理"
-                  />
-                  <TabButton 
-                    active={state.managementTab === 'info'} 
-                    onClick={() => setManagementTab('info')}
-                    label="信息设置"
+                    label="文档列表"
                   />
                   <TabButton 
                     active={state.managementTab === 'members'} 
                     onClick={() => setManagementTab('members')}
-                    label="成员管理"
+                    label="成员权限"
+                  />
+                  <TabButton 
+                    active={state.managementTab === 'info'} 
+                    onClick={() => setManagementTab('info')}
+                    label="基础设置"
                   />
                   <TabButton 
                     active={state.managementTab === 'permissions'} 
                     onClick={() => setManagementTab('permissions')}
-                    label="权限设置"
+                    label="高级权限"
                   />
                   <TabButton 
                     active={state.managementTab === 'export'} 
@@ -92,19 +104,29 @@ function AppContent() {
                 </div>
               </div>
 
-              <div className="p-10 max-w-6xl">
-                {state.managementTab === 'docs' && <DocumentManagement />}
-                {state.managementTab === 'info' && <InfoSettings />}
-                {state.managementTab === 'members' && <MemberManagement />}
-                {state.managementTab === 'permissions' && <PermissionSettings />}
-                {state.managementTab === 'export' && <DataExport />}
-                {state.managementTab === 'audit' && (
-                  <div className="flex flex-col items-center justify-center py-20 text-on-surface-variant/40">
-                    <p className="text-lg font-medium">安全审计功能正在开发中...</p>
-                  </div>
-                )}
+              <div className="p-12 max-w-7xl mx-auto w-full flex-1">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4 }}
+                >
+                  {state.managementTab === 'docs' && <DocumentManagement />}
+                  {state.managementTab === 'info' && <InfoSettings />}
+                  {state.managementTab === 'members' && <MemberManagement />}
+                  {state.managementTab === 'permissions' && <PermissionSettings />}
+                  {state.managementTab === 'export' && <DataExport />}
+                  {state.managementTab === 'audit' && (
+                    <div className="flex flex-col items-center justify-center py-32 text-gray-400">
+                      <div className="w-20 h-20 bg-gray-50 rounded-3xl flex items-center justify-center mb-6">
+                        <span className="material-symbols-outlined text-4xl">security</span>
+                      </div>
+                      <p className="text-xl font-bold text-gray-900 mb-2">安全审计</p>
+                      <p className="text-gray-500">该功能正在开发中，敬请期待...</p>
+                    </div>
+                  )}
+                </motion.div>
               </div>
-            </>
+            </div>
           )}
         </main>
       </div>
@@ -113,13 +135,15 @@ function AppContent() {
       <CreateDocModal />
       <TemplateGalleryModal />
       
-      {/* Floating Action Button for Demo */}
-      <button 
+      {/* Floating Action Button */}
+      <motion.button 
+        whileHover={{ scale: 1.1, rotate: 90 }}
+        whileTap={{ scale: 0.9 }}
         onClick={() => setIsCreateDocModalOpen(true)}
-        className="fixed bottom-8 right-8 w-14 h-14 bg-primary-container text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-transform z-50"
+        className="fixed bottom-10 right-10 w-16 h-16 bg-[#141414] text-white rounded-2xl shadow-2xl flex items-center justify-center z-50 group"
       >
-        <span className="material-symbols-outlined">add</span>
-      </button>
+        <Plus className="w-8 h-8 group-hover:scale-110 transition-transform" />
+      </motion.button>
     </div>
   );
 }
@@ -136,13 +160,16 @@ function TabButton({ active, onClick, label }: { active: boolean, onClick: () =>
   return (
     <button 
       onClick={onClick}
-      className={`pb-4 text-sm font-medium transition-all relative ${
-        active ? 'text-primary-container font-bold' : 'text-on-surface-variant/60 hover:text-primary-container'
+      className={`pb-4 text-sm font-bold transition-all relative ${
+        active ? 'text-gray-900' : 'text-gray-400 hover:text-gray-600'
       }`}
     >
       {label}
       {active && (
-        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-container rounded-full" />
+        <motion.div 
+          layoutId="activeTab"
+          className="absolute bottom-0 left-0 right-0 h-1 bg-gray-900 rounded-full" 
+        />
       )}
     </button>
   );

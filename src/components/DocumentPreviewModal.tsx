@@ -24,7 +24,7 @@ export default function DocumentPreviewModal({ isOpen, onClose, documentTitle }:
         const pages = Math.max(1, Math.ceil(contentRef.current.scrollHeight / 1122));
         setStats({ words, pages });
 
-        const headings = Array.from(contentRef.current.querySelectorAll('h1, h2, h3'));
+        const headings = Array.from(contentRef.current.querySelectorAll('h1, h2, h3')) as HTMLElement[];
         const newToc = headings.map((h, i) => {
           if (!h.id) h.id = `preview-heading-${i}`;
           return {

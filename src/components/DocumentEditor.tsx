@@ -1,4 +1,4 @@
-import { ArrowLeft, Share2, MessageSquare, MoreHorizontal, Bold, Italic, Underline as UnderlineIcon, Strikethrough, Quote, Code, Link as LinkIcon, Image as ImageIcon, Table, List, ListOrdered, AlignLeft, AlignCenter, AlignRight, ListTree, Loader2, CloudLightning, CheckSquare, Pin, PinOff, Combine } from 'lucide-react';
+import { ArrowLeft, Share2, MessageSquare, MoreHorizontal, Bold, Italic, Underline as UnderlineIcon, Strikethrough, Quote, Code, Link as LinkIcon, Image as ImageIcon, Table, List, ListOrdered, AlignLeft, AlignCenter, AlignRight, AlignJustify, ListTree, Loader2, CloudLightning, CheckSquare, Pin, PinOff, Combine, Palette, Type, Search, FileText, LayoutDashboard, History as HistoryIcon } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
@@ -10,12 +10,15 @@ import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
 import Underline from '@tiptap/extension-underline';
 import TextAlign from '@tiptap/extension-text-align';
+import { Color } from '@tiptap/extension-color';
+import { TextStyle } from '@tiptap/extension-text-style';
 import GlobalDragHandle from 'tiptap-extension-global-drag-handle';
 import * as Y from 'yjs';
 // WebrtcProvider is imported dynamically in useEffect to avoid hangs
 import Collaboration from '@tiptap/extension-collaboration';
 import CollaborationCursor from '@tiptap/extension-collaboration-cursor';
 import { SlashCommand, suggestionOptions } from './editor/SlashCommand';
+import { motion, AnimatePresence } from 'motion/react';
 
 const colors = ['#958DF1', '#F98181', '#FBBC88', '#FAF594', '#70CFF8', '#94FADB', '#B9F18D'];
 const names = ['Alice', 'Bob', 'Charlie', 'David', 'Eve', 'Frank', 'Grace'];
@@ -38,7 +41,7 @@ const getWordAlignedPrefix = (str1: string, str2: string) => {
 };
 
 export default function DocumentEditor() {
-  const { state, closeEditor } = useApp();
+  const { state, closeEditor, openVersionHistory } = useApp();
   const [toc, setToc] = useState<{ id: string; text: string; level: number }[]>([]);
   const [stats, setStats] = useState({ words: 0, pages: 1 });
   const [isTocOpen, setIsTocOpen] = useState(true);
@@ -100,15 +103,27 @@ export default function DocumentEditor() {
 
   const [ydoc] = useState(() => new Y.Doc());
   const [provider, setProvider] = useState<any>(null);
+  const providerRef = useRef<any>(null);
 
   useEffect(() => {
+    let mounted = true;
     let webrtcProvider: any = null;
     
     const initProvider = async () => {
       try {
         const { WebrtcProvider } = await import('y-webrtc');
+        if (!mounted) return;
+
         const roomName = `aida-doc-${state.currentDocTitle?.replace(/\s+/g, '-') || 'untitled'}`;
+        
+        // Cleanup any existing provider in this ref before creating a new one
+        if (providerRef.current) {
+          providerRef.current.destroy();
+          providerRef.current = null;
+        }
+
         webrtcProvider = new WebrtcProvider(roomName, ydoc);
+        providerRef.current = webrtcProvider;
         setProvider(webrtcProvider);
       } catch (error) {
         console.error('Failed to initialize WebRTC provider:', error);
@@ -118,9 +133,23 @@ export default function DocumentEditor() {
     initProvider();
 
     return () => {
+      mounted = false;
       if (webrtcProvider) {
-        webrtcProvider.destroy();
+        try {
+          webrtcProvider.destroy();
+        } catch (e) {
+          console.warn('Error destroying provider:', e);
+        }
       }
+      if (providerRef.current) {
+        try {
+          providerRef.current.destroy();
+        } catch (e) {
+          console.warn('Error destroying provider ref:', e);
+        }
+        providerRef.current = null;
+      }
+      setProvider(null);
     };
   }, [state.currentDocTitle, ydoc]);
 
@@ -131,6 +160,25 @@ export default function DocumentEditor() {
       setSaveStatus('saved');
     }, 1500);
   };
+
+  // Periodic auto-save every 15 seconds
+  useEffect(() => {
+    const autoSaveInterval = setInterval(() => {
+      // Only trigger if not already saving from manual input
+      setSaveStatus(prev => {
+        if (prev === 'saved') {
+          console.log('Periodic auto-save triggered...');
+          setTimeout(() => {
+            setSaveStatus('saved');
+          }, 1500);
+          return 'saving';
+        }
+        return prev;
+      });
+    }, 15000);
+
+    return () => clearInterval(autoSaveInterval);
+  }, []);
 
   const updateContentInfo = (editorInstance: any) => {
     const text = editorInstance.getText();
@@ -169,6 +217,8 @@ export default function DocumentEditor() {
       TaskList,
       TaskItem.configure({ nested: true }),
       Underline,
+      TextStyle,
+      Color,
       TextAlign.configure({
         types: ['heading', 'paragraph'],
       }),
@@ -239,160 +289,309 @@ export default function DocumentEditor() {
             onChange={handleInput}
             className="text-lg font-bold font-headline bg-transparent border-none outline-none focus:ring-2 focus:ring-primary-container/20 rounded px-2 py-1 w-64"
           />
-          <div className="flex items-center gap-1.5 text-xs text-on-surface-variant/60 bg-surface-container-low px-2.5 py-1 rounded-md">
+          <div className="flex items-center gap-1.5 text-xs text-on-surface-variant/60 bg-surface-container-low px-2.5 py-1 rounded-md border border-outline-variant/5">
             {saveStatus === 'saving' ? (
               <>
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                <span>保存中...</span>
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-primary-container" />
+                <span className="font-medium">正在保存...</span>
               </>
             ) : (
               <>
                 <CloudLightning className="w-3.5 h-3.5 text-primary-container" />
-                <span>已保存到云端</span>
+                <span className="font-medium">已同步到云端</span>
               </>
             )}
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="flex -space-x-2 mr-2">
-            <img className="w-8 h-8 rounded-full border-2 border-white" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDpIpPMQPYDOfe7v3lPdd-cRR9nBEKGllc3JwBkHzmPCgiSRUhj77bTpE-2HZy33XaWhoe87NI18s1qDtSQSD0RIh0T-aeVtnxQ35fjr_XB4EoJeb1CBoYA8XVPZstnaI-fMVdyNhOydSD3u6EZOdz78tkFeZogi8KXMiYjNY7xWGbqUrVJBIBNbcWn0Y_SjcD9ehgLghb6NeAALLa4WnZv3kwAhmXCpcTKMs9N5CVbLHjmFPSnwXHZ1Qo1rf8ABU92d2Yodm3YVYg" alt="User 1" referrerPolicy="no-referrer" />
-            <img className="w-8 h-8 rounded-full border-2 border-white" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB4AYIO4lvwRotU__Hyb8m4X2_PBYXpmgE-3rSY0X6PefT0wGOIhH0xul8vUxrWuKc7z9JAtiD06VpaVtwvXzJH_DWciqhy28xJ3dtSjmVQD0vMAZhpryvzbqpqDzdSpJTS_mDFPL1ciyDMLBbZQmbCwmwy28uMskXr7npr-Ik0IepIpmFi-tJgYChPVtGNyTtMdKXbhpKuwwyNUCPv8EfJFNsXlSuVBTXDG8w2eLTQDYj_FT31TsG7-XsSbt1J5oHLdLYmepkLipM" alt="User 2" referrerPolicy="no-referrer" />
+        <div className="flex items-center gap-4">
+          <div className="flex items-center -space-x-2.5">
+            {[
+              { name: '张三', color: 'bg-blue-500', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDpIpPMQPYDOfe7v3lPdd-cRR9nBEKGllc3JwBkHzmPCgiSRUhj77bTpE-2HZy33XaWhoe87NI18s1qDtSQSD0RIh0T-aeVtnxQ35fjr_XB4EoJeb1CBoYA8XVPZstnaI-fMVdyNhOydSD3u6EZOdz78tkFeZogi8KXMiYjNY7xWGbqUrVJBIBNbcWn0Y_SjcD9ehgLghb6NeAALLa4WnZv3kwAhmXCpcTKMs9N5CVbLHjmFPSnwXHZ1Qo1rf8ABU92d2Yodm3YVYg' },
+              { name: '李四', color: 'bg-green-500', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB4AYIO4lvwRotU__Hyb8m4X2_PBYXpmgE-3rSY0X6PefT0wGOIhH0xul8vUxrWuKc7z9JAtiD06VpaVtwvXzJH_DWciqhy28xJ3dtSjmVQD0vMAZhpryvzbqpqDzdSpJTS_mDFPL1ciyDMLBbZQmbCwmwy28uMskXr7npr-Ik0IepIpmFi-tJgYChPVtGNyTtMdKXbhpKuwwyNUCPv8EfJFNsXlSuVBTXDG8w2eLTQDYj_FT31TsG7-XsSbt1J5oHLdLYmepkLipM' },
+              { name: '王五', color: 'bg-amber-500', img: 'https://picsum.photos/seed/user3/32/32' }
+            ].map((user, idx) => (
+              <motion.div 
+                key={idx}
+                whileHover={{ y: -2, zIndex: 10 }}
+                className="relative group"
+              >
+                <img 
+                  className="w-8 h-8 rounded-full border-2 border-white shadow-sm object-cover" 
+                  src={user.img} 
+                  alt={user.name} 
+                  referrerPolicy="no-referrer" 
+                />
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-on-surface text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                  {user.name} 正在编辑
+                </div>
+              </motion.div>
+            ))}
+            <div className="w-8 h-8 rounded-full border-2 border-white bg-surface-container-high flex items-center justify-center text-[10px] font-bold text-on-surface-variant shadow-sm">
+              +2
+            </div>
           </div>
-          <button className="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full transition-colors">
-            <MessageSquare className="w-5 h-5" />
-          </button>
-          <button className="px-4 py-1.5 bg-primary-container text-white text-sm font-bold rounded-full hover:opacity-90 transition-opacity flex items-center gap-2">
-            <Share2 className="w-4 h-4" />
-            分享
-          </button>
-          <button className="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full transition-colors">
-            <MoreHorizontal className="w-5 h-5" />
-          </button>
+          <div className="w-px h-6 bg-outline-variant/20"></div>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => openVersionHistory(state.currentDocTitle || '未命名文档')}
+              className="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-xl transition-colors"
+              title="版本历史"
+            >
+              <HistoryIcon className="w-5 h-5" />
+            </button>
+            <button className="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-xl transition-colors relative">
+              <MessageSquare className="w-5 h-5" />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-primary-container rounded-full border-2 border-white"></span>
+            </button>
+            <button className="px-5 py-2 bg-primary-container text-white text-sm font-bold rounded-xl hover:shadow-lg hover:shadow-primary-container/20 active:scale-95 transition-all flex items-center gap-2">
+              <Share2 className="w-4 h-4" />
+              分享
+            </button>
+          </div>
         </div>
       </header>
 
       {/* Toolbar */}
-      <div className="h-12 border-b border-outline-variant/5 flex items-center justify-between px-4 shrink-0 bg-surface-container-lowest/50 z-10 overflow-x-auto custom-scrollbar">
-        <div className="flex items-center gap-1 shrink-0">
-          <select 
-            className="text-sm border-none bg-transparent hover:bg-surface-container-low rounded px-2 py-1 outline-none cursor-pointer font-medium"
-            onChange={(e) => {
-              const val = e.target.value;
-              if (val === 'p') editor.chain().focus().setParagraph().run();
-              else editor.chain().focus().toggleHeading({ level: parseInt(val) as any }).run();
-            }}
-            value={editor.isActive('heading', { level: 1 }) ? '1' : editor.isActive('heading', { level: 2 }) ? '2' : editor.isActive('heading', { level: 3 }) ? '3' : 'p'}
-          >
-            <option value="p">正文</option>
-            <option value="1">标题 1</option>
-            <option value="2">标题 2</option>
-            <option value="3">标题 3</option>
-          </select>
-          <div className="w-px h-4 bg-outline-variant/20 mx-2"></div>
-          <ToolbarBtn icon={Bold} isActive={editor.isActive('bold')} onClick={() => editor.chain().focus().toggleBold().run()} />
-          <ToolbarBtn icon={Italic} isActive={editor.isActive('italic')} onClick={() => editor.chain().focus().toggleItalic().run()} />
-          <ToolbarBtn icon={UnderlineIcon} isActive={editor.isActive('underline')} onClick={() => editor.chain().focus().toggleUnderline().run()} />
-          <ToolbarBtn icon={Strikethrough} isActive={editor.isActive('strike')} onClick={() => editor.chain().focus().toggleStrike().run()} />
-          <div className="w-px h-4 bg-outline-variant/20 mx-2"></div>
-          <ToolbarBtn icon={Quote} isActive={editor.isActive('blockquote')} onClick={() => editor.chain().focus().toggleBlockquote().run()} />
-          <ToolbarBtn icon={Code} isActive={editor.isActive('codeBlock')} onClick={() => editor.chain().focus().toggleCodeBlock().run()} />
-          <ToolbarBtn icon={LinkIcon} isActive={editor.isActive('link')} onClick={() => {
-            if (editor.isActive('link')) {
-              editor.chain().focus().unsetLink().run();
-            } else {
-              const url = window.prompt('URL');
-              if (url) editor.chain().focus().setLink({ href: url }).run();
-            }
-          }} />
-          <div className="w-px h-4 bg-outline-variant/20 mx-2"></div>
-          <ToolbarBtn icon={ImageIcon} onClick={() => {
-            const url = window.prompt('Image URL');
-            if (url) editor.chain().focus().setImage({ src: url }).run();
-          }} />
-          <div className="w-px h-4 bg-outline-variant/20 mx-2"></div>
-          <ToolbarBtn icon={AlignLeft} isActive={editor.isActive({ textAlign: 'left' })} onClick={() => editor.chain().focus().setTextAlign('left').run()} />
-          <ToolbarBtn icon={AlignCenter} isActive={editor.isActive({ textAlign: 'center' })} onClick={() => editor.chain().focus().setTextAlign('center').run()} />
-          <ToolbarBtn icon={AlignRight} isActive={editor.isActive({ textAlign: 'right' })} onClick={() => editor.chain().focus().setTextAlign('right').run()} />
-          <div className="w-px h-4 bg-outline-variant/20 mx-2"></div>
-          <ToolbarBtn icon={List} isActive={editor.isActive('bulletList')} onClick={() => editor.chain().focus().toggleBulletList().run()} />
-          <ToolbarBtn icon={ListOrdered} isActive={editor.isActive('orderedList')} onClick={() => editor.chain().focus().toggleOrderedList().run()} />
-          <ToolbarBtn icon={CheckSquare} isActive={editor.isActive('taskList')} onClick={() => editor.chain().focus().toggleTaskList().run()} />
+      <div className="h-14 border-b border-outline-variant/5 flex items-center justify-between px-6 shrink-0 bg-white/90 backdrop-blur-xl z-10 overflow-x-auto custom-scrollbar sticky top-0">
+        <div className="flex items-center gap-2 shrink-0">
+          {/* Text Style Group */}
+          <div className="flex items-center bg-gray-50 rounded-xl p-1 border border-gray-100 shadow-sm">
+            <div className="relative flex items-center">
+              <select 
+                className="appearance-none text-xs font-bold text-gray-700 bg-white border border-gray-200 rounded-lg pl-3 pr-8 py-1.5 outline-none cursor-pointer hover:border-gray-300 transition-all focus:ring-2 focus:ring-black/5"
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === 'p') editor.chain().focus().setParagraph().run();
+                  else editor.chain().focus().toggleHeading({ level: parseInt(val) as any }).run();
+                }}
+                value={editor.isActive('heading', { level: 1 }) ? '1' : editor.isActive('heading', { level: 2 }) ? '2' : editor.isActive('heading', { level: 3 }) ? '3' : 'p'}
+              >
+                <option value="p">正文文本</option>
+                <option value="1">一级标题</option>
+                <option value="2">二级标题</option>
+                <option value="3">三级标题</option>
+              </select>
+              <div className="absolute right-2.5 pointer-events-none text-gray-400">
+                <Type className="w-3 h-3" />
+              </div>
+            </div>
+          </div>
+          
+          <div className="w-px h-6 bg-gray-100 mx-1"></div>
+          
+          {/* Formatting Group */}
+          <div className="flex items-center bg-gray-50 rounded-xl p-1 border border-gray-100 shadow-sm">
+            <ToolbarBtn icon={Bold} isActive={editor.isActive('bold')} onClick={() => editor.chain().focus().toggleBold().run()} title="加粗 (Ctrl+B)" />
+            <ToolbarBtn icon={Italic} isActive={editor.isActive('italic')} onClick={() => editor.chain().focus().toggleItalic().run()} title="斜体 (Ctrl+I)" />
+            <ToolbarBtn icon={UnderlineIcon} isActive={editor.isActive('underline')} onClick={() => editor.chain().focus().toggleUnderline().run()} title="下划线 (Ctrl+U)" />
+            <ToolbarBtn icon={Strikethrough} isActive={editor.isActive('strike')} onClick={() => editor.chain().focus().toggleStrike().run()} title="删除线" />
+          </div>
+
+          <div className="w-px h-6 bg-gray-100 mx-1"></div>
+
+          {/* Alignment Group */}
+          <div className="flex items-center bg-gray-50 rounded-xl p-1 border border-gray-100 shadow-sm">
+            <ToolbarBtn 
+              icon={AlignLeft} 
+              isActive={editor.isActive({ textAlign: 'left' })} 
+              onClick={() => editor.chain().focus().setTextAlign('left').run()} 
+              title="左对齐"
+            />
+            <ToolbarBtn 
+              icon={AlignCenter} 
+              isActive={editor.isActive({ textAlign: 'center' })} 
+              onClick={() => editor.chain().focus().setTextAlign('center').run()} 
+              title="居中对齐"
+            />
+            <ToolbarBtn 
+              icon={AlignRight} 
+              isActive={editor.isActive({ textAlign: 'right' })} 
+              onClick={() => editor.chain().focus().setTextAlign('right').run()} 
+              title="右对齐"
+            />
+            <ToolbarBtn 
+              icon={AlignJustify} 
+              isActive={editor.isActive({ textAlign: 'justify' })} 
+              onClick={() => editor.chain().focus().setTextAlign('justify').run()} 
+              title="两端对齐"
+            />
+          </div>
+
+          <div className="w-px h-6 bg-gray-100 mx-1"></div>
+
+          {/* Lists Group */}
+          <div className="flex items-center bg-gray-50 rounded-xl p-1 border border-gray-100 shadow-sm">
+            <ToolbarBtn icon={List} isActive={editor.isActive('bulletList')} onClick={() => editor.chain().focus().toggleBulletList().run()} title="无序列表" />
+            <ToolbarBtn icon={ListOrdered} isActive={editor.isActive('orderedList')} onClick={() => editor.chain().focus().toggleOrderedList().run()} title="有序列表" />
+            <ToolbarBtn icon={CheckSquare} isActive={editor.isActive('taskList')} onClick={() => editor.chain().focus().toggleTaskList().run()} title="任务列表" />
+          </div>
+
+          <div className="w-px h-6 bg-gray-100 mx-1"></div>
+
+          {/* Blocks Group */}
+          <div className="flex items-center bg-gray-50 rounded-xl p-1 border border-gray-100 shadow-sm">
+            <ToolbarBtn 
+              icon={Quote} 
+              isActive={editor.isActive('blockquote')} 
+              onClick={() => editor.chain().focus().toggleBlockquote().run()} 
+              title="引用"
+            />
+            <ToolbarBtn 
+              icon={Code} 
+              isActive={editor.isActive('codeBlock')} 
+              onClick={() => editor.chain().focus().toggleCodeBlock().run()} 
+              title="代码块"
+            />
+          </div>
+
+          <div className="w-px h-6 bg-gray-100 mx-1"></div>
+
+          {/* Insert Group */}
+          <div className="flex items-center bg-gray-50 rounded-xl p-1 border border-gray-100 shadow-sm">
+            <ToolbarBtn icon={LinkIcon} isActive={editor.isActive('link')} onClick={() => {
+              if (editor.isActive('link')) {
+                editor.chain().focus().unsetLink().run();
+              } else {
+                const url = window.prompt('输入链接地址:');
+                if (url) editor.chain().focus().setLink({ href: url }).run();
+              }
+            }} title="插入链接" />
+            <ToolbarBtn icon={ImageIcon} onClick={() => {
+              const url = window.prompt('输入图片地址:');
+              if (url) editor.chain().focus().setImage({ src: url }).run();
+            }} title="插入图片" />
+            <div className="relative flex items-center">
+              <ToolbarBtn 
+                icon={Palette} 
+                onClick={() => {
+                  const color = window.prompt('输入颜色代码 (例如: #ff0000):', editor.getAttributes('textStyle').color || '#000000');
+                  if (color !== null) {
+                    editor.chain().focus().setColor(color).run();
+                  }
+                }}
+                isActive={!!editor.getAttributes('textStyle').color}
+                title="文本颜色"
+              />
+              {editor.getAttributes('textStyle').color && (
+                <div 
+                  className="absolute bottom-1.5 right-1.5 w-1.5 h-1.5 rounded-full border border-white shadow-sm" 
+                  style={{ backgroundColor: editor.getAttributes('textStyle').color }}
+                />
+              )}
+            </div>
+          </div>
         </div>
         
-        <button 
-          onClick={() => setIsTocOpen(!isTocOpen)}
-          className={`p-2 rounded-lg transition-colors flex items-center gap-2 text-sm font-medium shrink-0 ml-4 ${isTocOpen ? 'bg-primary-container/10 text-primary-container' : 'text-on-surface-variant hover:bg-surface-container-low'}`}
-        >
-          <ListTree className="w-4 h-4" />
-          目录
-        </button>
+        <div className="flex items-center gap-3 shrink-0 ml-4">
+          <button 
+            onClick={() => setIsTocOpen(!isTocOpen)}
+            className={`px-4 py-2 rounded-xl transition-all flex items-center gap-2 text-xs font-bold border ${
+              isTocOpen 
+                ? 'bg-[#141414] text-white border-[#141414] shadow-lg shadow-black/10' 
+                : 'bg-white text-gray-600 hover:bg-gray-50 border-gray-100'
+            }`}
+          >
+            <ListTree className="w-3.5 h-3.5" />
+            文档大纲
+          </button>
+        </div>
       </div>
 
       {/* Main Content Area */}
       <div className="flex-1 flex overflow-hidden bg-surface relative">
         {/* ToC Sidebar */}
-        {isTocOpen && (
-          <div className={`
-            bg-surface-container-lowest flex flex-col shrink-0 z-20 transition-all duration-300
-            ${isTocPinned ? 'w-64 border-r border-outline-variant/10 relative' : 'w-64 absolute left-0 top-0 bottom-0 shadow-2xl'}
-          `}>
-            <div className="p-4 border-b border-outline-variant/5 font-bold text-sm text-on-surface flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <ListTree className="w-4 h-4" />
-                大纲目录
-              </div>
-              <div className="flex items-center gap-1">
-                <button 
-                  onClick={() => setGroupSimilar(!groupSimilar)}
-                  className={`p-1.5 rounded transition-colors ${groupSimilar ? 'bg-primary-container/20 text-primary-container' : 'text-on-surface-variant hover:bg-surface-container-low'}`}
-                  title="自动分组相似标题"
-                >
-                  <Combine className="w-3.5 h-3.5" />
-                </button>
-                <button 
-                  onClick={() => setIsTocPinned(!isTocPinned)}
-                  className={`p-1.5 rounded transition-colors ${isTocPinned ? 'bg-primary-container/20 text-primary-container' : 'text-on-surface-variant hover:bg-surface-container-low'}`}
-                  title={isTocPinned ? "取消固定" : "固定在侧边"}
-                >
-                  {isTocPinned ? <Pin className="w-3.5 h-3.5" /> : <PinOff className="w-3.5 h-3.5" />}
-                </button>
-              </div>
-            </div>
-            <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-              {displayToc.length > 0 ? (
-                <ul className="space-y-2">
-                  {displayToc.map((item) => (
-                    <li 
-                      key={item.id} 
-                      className={`text-sm cursor-pointer hover:text-primary-container transition-colors line-clamp-1 ${
-                        item.isGroupHeader ? 'font-bold text-primary text-xs uppercase tracking-wider mt-4 mb-2' :
-                        item.level === 1 ? 'font-bold text-on-surface' : 
-                        item.level === 2 ? 'pl-4 text-on-surface-variant' : 
-                        'pl-8 text-on-surface-variant/80 text-xs'
-                      } ${item.isGroupedItem ? 'border-l-2 border-primary-container/30 ml-2 pl-3' : ''}`}
-                      onClick={() => {
-                        if (!item.isGroupHeader) {
-                          scrollToHeading(item.id);
-                          if (!isTocPinned) setIsTocOpen(false);
-                        }
-                      }}
-                      title={item.text}
+        <AnimatePresence>
+          {isTocOpen && (
+            <motion.div 
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -20, opacity: 0 }}
+              className={`
+                bg-surface-container flex flex-col shrink-0 z-20 transition-all duration-300
+                ${isTocPinned ? 'w-64 border-r border-outline-variant/10 relative' : 'w-64 absolute left-0 top-0 bottom-0 shadow-2xl'}
+              `}
+            >
+              <div className="p-4 border-b border-outline-variant/5 flex flex-col gap-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 font-bold text-sm text-on-surface">
+                    <ListTree className="w-4 h-4 text-primary-container" />
+                    大纲目录
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <button 
+                      onClick={() => setGroupSimilar(!groupSimilar)}
+                      className={`p-1.5 rounded-lg transition-colors ${groupSimilar ? 'bg-primary-container/20 text-primary-container' : 'text-on-surface-variant hover:bg-surface-container-low'}`}
+                      title="自动分组相似标题"
                     >
-                      {item.text}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-xs text-on-surface-variant/40 text-center mt-10">暂无目录结构</p>
-              )}
-            </div>
-            {/* Stats Footer in Sidebar */}
-            <div className="p-4 border-t border-outline-variant/5 bg-surface-container-lowest/50 text-xs text-on-surface-variant flex justify-between items-center">
-              <span>字数：{stats.words}</span>
-              <span>页数：~{stats.pages}</span>
-            </div>
-          </div>
-        )}
+                      <Combine className="w-3.5 h-3.5" />
+                    </button>
+                    <button 
+                      onClick={() => setIsTocPinned(!isTocPinned)}
+                      className={`p-1.5 rounded-lg transition-colors ${isTocPinned ? 'bg-primary-container/20 text-primary-container' : 'text-on-surface-variant hover:bg-surface-container-low'}`}
+                      title={isTocPinned ? "取消固定" : "固定在侧边"}
+                    >
+                      {isTocPinned ? <Pin className="w-3.5 h-3.5" /> : <PinOff className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="relative group">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-on-surface-variant/40 group-focus-within:text-primary-container transition-colors" />
+                  <input 
+                    type="text" 
+                    placeholder="在目录中搜索..."
+                    className="w-full bg-surface-container-low border border-outline-variant/10 rounded-lg py-1.5 pl-8 pr-3 text-xs outline-none focus:ring-2 focus:ring-primary-container/20 focus:bg-white transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+                {displayToc.length > 0 ? (
+                  <ul className="space-y-1">
+                    {displayToc.map((item) => (
+                      <li 
+                        key={item.id} 
+                        className={`text-sm cursor-pointer transition-all rounded-lg px-2 py-1.5 line-clamp-1 ${
+                          item.isGroupHeader ? 'font-bold text-primary text-[10px] uppercase tracking-widest mt-4 mb-1 hover:bg-transparent' :
+                          item.level === 1 ? 'font-bold text-on-surface hover:bg-white hover:text-primary-container' : 
+                          item.level === 2 ? 'pl-4 text-on-surface-variant hover:bg-white hover:text-primary-container' : 
+                          'pl-8 text-on-surface-variant/70 text-xs hover:bg-white hover:text-primary-container'
+                        } ${item.isGroupedItem ? 'border-l-2 border-primary-container/20 ml-2 pl-3' : ''}`}
+                        onClick={() => {
+                          if (!item.isGroupHeader) {
+                            scrollToHeading(item.id);
+                            if (!isTocPinned) setIsTocOpen(false);
+                          }
+                        }}
+                        title={item.text}
+                      >
+                        {item.text}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="flex flex-col items-center justify-center mt-20 text-on-surface-variant/30">
+                    <ListTree className="w-8 h-8 mb-2 opacity-20" />
+                    <p className="text-xs font-medium">暂无目录结构</p>
+                  </div>
+                )}
+              </div>
+              
+              <div className="p-4 border-t border-outline-variant/5 bg-surface-container-low/50">
+                <div className="flex justify-between items-center text-[10px] font-bold text-on-surface-variant/40 uppercase tracking-widest">
+                  <div className="flex items-center gap-1">
+                    <FileText className="w-3 h-3" />
+                    {stats.words} 字
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <LayoutDashboard className="w-3 h-3" />
+                    约 {stats.pages} 页
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Editor Area */}
         <div className="flex-1 overflow-y-auto custom-scrollbar flex justify-center py-10 relative">
@@ -405,13 +604,20 @@ export default function DocumentEditor() {
   );
 }
 
-function ToolbarBtn({ icon: Icon, isActive, onClick }: { icon: any, isActive?: boolean, onClick?: () => void }) {
+function ToolbarBtn({ icon: Icon, isActive, onClick, title }: { icon: any, isActive?: boolean, onClick?: () => void, title?: string }) {
   return (
-    <button 
+    <motion.button 
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
       onClick={onClick}
-      className={`p-1.5 rounded transition-colors ${isActive ? 'bg-primary-container/20 text-primary-container' : 'text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface'}`}
+      className={`p-2 rounded-lg transition-all ${
+        isActive 
+          ? 'bg-[#141414] text-white shadow-md' 
+          : 'text-gray-500 hover:bg-white hover:text-gray-900 hover:shadow-sm'
+      }`}
+      title={title}
     >
       <Icon className="w-4 h-4" />
-    </button>
+    </motion.button>
   );
 }
