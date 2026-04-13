@@ -11,14 +11,15 @@ interface AppContextType {
   setIsTemplateGalleryOpen: (isOpen: boolean) => void;
   createKB: (name: string, description: string, access: AccessLevel) => void;
   selectKB: (id: string) => void;
-  setView: (view: 'workbench' | 'management' | 'trash' | 'editor' | 'version-history') => void;
+  setView: (view: 'workbench' | 'management' | 'trash' | 'editor' | 'version-history' | 'all-kbs' | 'notifications') => void;
   setManagementTab: (tab: ManagementTab) => void;
+  setGlobalSearchQuery: (query: string) => void;
   updateKB: (kbId: string, updates: Partial<KnowledgeBase>) => void;
   deleteKB: (kbId: string) => void;
   updateKBMembers: (kbId: string, members: Member[]) => void;
   removeMember: (kbId: string, memberId: string) => void;
   updateMemberRole: (kbId: string, memberId: string, role: Role) => void;
-  openEditor: (title: string, content?: string) => void;
+  openEditor: (title: string, content?: string, type?: 'doc' | 'sheet' | 'board') => void;
   closeEditor: () => void;
   openVersionHistory: (title: string) => void;
 }
@@ -70,6 +71,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     selectedKBId: 'kb-1',
     view: 'workbench',
     managementTab: 'members',
+    globalSearchQuery: '',
   });
 
   const createKB = (name: string, description: string, access: AccessLevel) => {
@@ -100,12 +102,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setState(prev => ({ ...prev, selectedKBId: id }));
   };
 
-  const setView = (view: 'workbench' | 'management' | 'trash' | 'editor' | 'version-history') => {
+  const setView = (view: 'workbench' | 'management' | 'trash' | 'editor' | 'version-history' | 'all-kbs' | 'notifications') => {
     setState(prev => ({ ...prev, lastView: prev.view !== 'version-history' ? prev.view as any : prev.lastView, view }));
   };
 
   const setManagementTab = (tab: ManagementTab) => {
     setState(prev => ({ ...prev, managementTab: tab }));
+  };
+
+  const setGlobalSearchQuery = (query: string) => {
+    setState(prev => ({ ...prev, globalSearchQuery: query }));
   };
 
   const updateKB = (kbId: string, updates: Partial<KnowledgeBase>) => {
@@ -159,12 +165,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }));
   };
 
-  const openEditor = (title: string, content?: string) => {
-    setState(prev => ({ ...prev, view: 'editor', currentDocTitle: title, currentDocContent: content }));
+  const openEditor = (title: string, content?: string, type: 'doc' | 'sheet' | 'board' = 'doc') => {
+    setState(prev => ({ ...prev, view: 'editor', currentDocTitle: title, currentDocContent: content, currentDocType: type }));
   };
 
   const closeEditor = () => {
-    setState(prev => ({ ...prev, view: 'workbench', currentDocTitle: undefined, currentDocContent: undefined }));
+    setState(prev => ({ ...prev, view: 'workbench', currentDocTitle: undefined, currentDocContent: undefined, currentDocType: undefined }));
   };
 
   const openVersionHistory = (title: string) => {
@@ -184,6 +190,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       selectKB, 
       setView, 
       setManagementTab,
+      setGlobalSearchQuery,
       updateKB,
       deleteKB,
       updateKBMembers, 

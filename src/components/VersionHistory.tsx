@@ -133,43 +133,43 @@ export default function VersionHistory({ onBack, documentTitle }: VersionHistory
             </div>
           </div>
         ) : (
-          <div className="flex-1 overflow-y-auto custom-scrollbar p-12">
+          <div className="flex-1 overflow-y-auto custom-scrollbar p-8">
             <div className="max-w-4xl mx-auto">
-              <div className="relative border-l-2 border-gray-100 ml-6 space-y-12 pb-12">
+              <div className="relative border-l-2 border-gray-100 ml-6 space-y-8 pb-8">
                 {versions.map((v) => (
-                  <div key={v.id} className="relative pl-12">
+                  <div key={v.id} className="relative pl-10">
                     {/* Timeline Dot */}
-                    <div className={`absolute -left-[13px] top-3 w-6 h-6 rounded-full border-4 border-[#F8F9FA] shadow-sm ${
+                    <div className={`absolute -left-[11px] top-2.5 w-5 h-5 rounded-full border-4 border-[#F8F9FA] shadow-sm ${
                       v.current ? 'bg-[#141414]' : 'bg-gray-200'
                     }`}></div>
                     
-                    <div className={`bg-white border rounded-[32px] p-10 transition-all duration-500 ${
-                      v.current ? 'border-[#141414]/10 shadow-xl shadow-black/[0.03] ring-1 ring-[#141414]/5' : 'border-gray-100 hover:border-gray-200 hover:shadow-lg hover:shadow-black/[0.02]'
+                    <div className={`bg-white border rounded-2xl p-6 transition-all duration-500 ${
+                      v.current ? 'border-[#141414]/10 shadow-lg shadow-black/[0.02] ring-1 ring-[#141414]/5' : 'border-gray-100 hover:border-gray-200 hover:shadow-md'
                     }`}>
-                      <div className="flex flex-col md:flex-row md:items-start justify-between gap-8 mb-8">
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
                         <div>
-                          <div className="flex items-center gap-4 mb-3">
-                            <span className="font-bold text-gray-900 text-3xl tracking-tight">{v.version}</span>
+                          <div className="flex items-center gap-3 mb-1">
+                            <span className="font-bold text-gray-900 text-xl tracking-tight">{v.version}</span>
                             {v.current && (
-                              <span className="bg-[#141414] text-white text-[10px] uppercase tracking-[0.2em] font-black px-3 py-1.5 rounded-full">
+                              <span className="bg-[#141414] text-white text-[9px] uppercase tracking-widest font-black px-2 py-1 rounded-full">
                                 CURRENT
                               </span>
                             )}
                           </div>
-                          <div className="text-sm text-gray-400 flex items-center gap-4 font-medium">
+                          <div className="text-[11px] text-gray-400 flex items-center gap-3 font-medium">
                             <span className="text-gray-600">{v.date}</span>
-                            <span className="w-1.5 h-1.5 bg-gray-200 rounded-full"></span>
+                            <span className="w-1 h-1 bg-gray-200 rounded-full"></span>
                             <span>BY <strong className="text-gray-900">{v.author}</strong></span>
                           </div>
                         </div>
                         
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2">
                           {!v.current && (
                             <button 
                               onClick={() => setComparingVersionId(v.id)}
-                              className="flex items-center gap-2 px-6 py-3 rounded-2xl text-sm font-bold bg-gray-50 text-gray-700 hover:bg-gray-100 transition-all border border-gray-100"
+                              className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-gray-50 text-gray-700 hover:bg-gray-100 transition-all border border-gray-100"
                             >
-                              <Diff className="w-4 h-4" />
+                              <Diff className="w-3.5 h-3.5" />
                               对比差异
                             </button>
                           )}
@@ -177,20 +177,20 @@ export default function VersionHistory({ onBack, documentTitle }: VersionHistory
                             <button 
                               onClick={() => handleRestore(v.id)}
                               disabled={restoredVersion !== null}
-                              className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-sm font-bold transition-all ${
+                              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
                                 restoredVersion === v.id 
                                   ? 'bg-green-500 text-white' 
-                                  : 'bg-[#141414] text-white hover:bg-gray-800 shadow-lg shadow-black/10'
+                                  : 'bg-[#141414] text-white hover:bg-gray-800 shadow-md shadow-black/5'
                               }`}
                             >
                               {restoredVersion === v.id ? (
                                 <>
-                                  <CheckCircle2 className="w-4 h-4" />
+                                  <CheckCircle2 className="w-3.5 h-3.5" />
                                   已恢复
                                 </>
                               ) : (
                                 <>
-                                  <RotateCcw className="w-4 h-4" />
+                                  <RotateCcw className="w-3.5 h-3.5" />
                                   恢复此版本
                                 </>
                               )}
@@ -199,9 +199,9 @@ export default function VersionHistory({ onBack, documentTitle }: VersionHistory
                         </div>
                       </div>
                       
-                      <div className="bg-gray-50/50 p-6 rounded-2xl border border-gray-100/50">
-                        <p className="font-black text-gray-300 text-[10px] uppercase tracking-[0.2em] mb-3">CHANGELOG</p>
-                        <p className="text-gray-600 leading-relaxed text-base font-medium">{v.changes}</p>
+                      <div className="bg-gray-50/50 p-4 rounded-xl border border-gray-100/50">
+                        <p className="font-black text-gray-300 text-[9px] uppercase tracking-widest mb-2">CHANGELOG</p>
+                        <p className="text-gray-600 leading-relaxed text-sm font-medium">{v.changes}</p>
                       </div>
                     </div>
                   </div>

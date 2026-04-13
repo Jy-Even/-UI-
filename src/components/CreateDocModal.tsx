@@ -19,7 +19,10 @@ export default function CreateDocModal() {
     if (id === 'template') {
       setIsTemplateGalleryOpen(true);
     } else {
-      openEditor(`未命名${title}`);
+      let type: 'doc' | 'sheet' | 'board' = 'doc';
+      if (id === 'sheet') type = 'sheet';
+      if (id === 'board') type = 'board';
+      openEditor(`未命名${title}`, undefined, type);
     }
   };
 

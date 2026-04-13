@@ -7,10 +7,9 @@ import ExportDocModal from './ExportDocModal';
 import EmptyState from './common/EmptyState';
 
 export default function DocumentManagement() {
-  const { state, openEditor, setIsCreateDocModalOpen, openVersionHistory } = useApp();
+  const { state, openEditor, setIsCreateDocModalOpen, openVersionHistory, setGlobalSearchQuery } = useApp();
   const selectedKB = state.knowledgeBases.find(kb => kb.id === state.selectedKBId);
   
-  const [searchQuery, setSearchQuery] = useState('');
   const [previewDoc, setPreviewDoc] = useState<{ isOpen: boolean; title: string }>({ isOpen: false, title: '' });
   const [exportDoc, setExportDoc] = useState<{ isOpen: boolean; title: string; type: 'doc' | 'sheet' | 'board' }>({ isOpen: false, title: '', type: 'doc' });
 
@@ -24,8 +23,8 @@ export default function DocumentManagement() {
   ];
 
   const filteredDocs = documents.filter(doc => 
-    doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    doc.author.toLowerCase().includes(searchQuery.toLowerCase())
+    doc.title.toLowerCase().includes(state.globalSearchQuery.toLowerCase()) ||
+    doc.author.toLowerCase().includes(state.globalSearchQuery.toLowerCase())
   );
 
   const openPreview = (title: string, e: React.MouseEvent) => {
@@ -52,7 +51,7 @@ export default function DocumentManagement() {
           <div className="flex items-center gap-3">
             <h2 className="text-2xl font-bold text-gray-900">文档管理</h2>
             <span className="bg-gray-100 text-gray-500 text-xs font-bold px-2.5 py-1 rounded-full">
-              {searchQuery ? `找到 ${filteredDocs.length} 篇` : `共 ${documents.length} 篇`}
+              {state.globalSearchQuery ? `找到 ${filteredDocs.length} 篇` : `共 ${documents.length} 篇`}
             </span>
           </div>
           <p className="text-sm text-gray-500 mt-1">管理当前知识库中的所有文档、查看版本历史或进行清理</p>
@@ -64,12 +63,12 @@ export default function DocumentManagement() {
               className="bg-white border border-gray-100 text-sm rounded-xl pl-10 pr-10 py-2.5 w-64 focus:ring-4 focus:ring-gray-100 focus:border-gray-200 outline-none transition-all" 
               placeholder="搜索文档标题或作者..." 
               type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              value={state.globalSearchQuery}
+              onChange={(e) => setGlobalSearchQuery(e.target.value)}
             />
-            {searchQuery && (
+            {state.globalSearchQuery && (
               <button 
-                onClick={() => setSearchQuery('')}
+                onClick={() => setGlobalSearchQuery('')}
                 className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600 transition-all"
                 title="清除搜索"
               >
@@ -144,11 +143,11 @@ export default function DocumentManagement() {
                   <td colSpan={4}>
                     <EmptyState 
                       icon={Search}
-                      title={searchQuery ? "未找到匹配的文档" : "暂无文档"}
-                      description={searchQuery ? `未找到与 "${searchQuery}" 相关的文档，请尝试更换关键词。` : "当前知识库中还没有任何文档，点击上方按钮开始创建。"}
-                      action={searchQuery ? {
+                      title={state.globalSearchQuery ? "未找到匹配的文档" : "暂无文档"}
+                      description={state.globalSearchQuery ? `未找到与 "${state.globalSearchQuery}" 相关的文档，请尝试更换关键词。` : "当前知识库中还没有任何文档，点击上方按钮开始创建。"}
+                      action={state.globalSearchQuery ? {
                         label: "清除搜索",
-                        onClick: () => setSearchQuery(''),
+                        onClick: () => setGlobalSearchQuery(''),
                         icon: X
                       } : {
                         label: "新建文档",

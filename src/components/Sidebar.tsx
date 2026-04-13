@@ -8,7 +8,7 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ onCreateNew }: SidebarProps) {
-  const { state, setView, setManagementTab, selectKB } = useApp();
+  const { state, setView, setManagementTab, selectKB, setGlobalSearchQuery } = useApp();
   const [isKBMenuOpen, setIsKBMenuOpen] = useState(false);
   const kbMenuRef = useRef<HTMLDivElement>(null);
   const selectedKB = state.knowledgeBases.find(kb => kb.id === state.selectedKBId);
@@ -107,6 +107,8 @@ export default function Sidebar({ onCreateNew }: SidebarProps) {
           <input 
             type="text" 
             placeholder="搜索文档..."
+            value={state.globalSearchQuery}
+            onChange={(e) => setGlobalSearchQuery(e.target.value)}
             className="w-full bg-gray-50 border border-transparent rounded-2xl py-3 pl-11 pr-4 text-sm outline-none focus:bg-white focus:border-gray-200 transition-all font-medium"
           />
         </div>

@@ -1,4 +1,4 @@
-import { ArrowLeft, Share2, MessageSquare, MoreHorizontal, Bold, Italic, Underline as UnderlineIcon, Strikethrough, Quote, Code, Link as LinkIcon, Image as ImageIcon, Table, List, ListOrdered, AlignLeft, AlignCenter, AlignRight, AlignJustify, ListTree, Loader2, CloudLightning, CheckSquare, Pin, PinOff, Combine, Palette, Type, Search, FileText, LayoutDashboard, History as HistoryIcon } from 'lucide-react';
+import { ArrowLeft, Share2, MessageSquare, MoreHorizontal, Bold, Italic, Underline as UnderlineIcon, Strikethrough, Quote, Code, Link as LinkIcon, Image as ImageIcon, Table, List, ListOrdered, AlignLeft, AlignCenter, AlignRight, AlignJustify, ListTree, Loader2, CloudLightning, CheckSquare, Pin, PinOff, Combine, Palette, Type, Search, FileText, LayoutDashboard, History as HistoryIcon, Grid3X3, Presentation } from 'lucide-react';
 import { useApp } from '../AppContext';
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
@@ -19,6 +19,8 @@ import Collaboration from '@tiptap/extension-collaboration';
 import CollaborationCursor from '@tiptap/extension-collaboration-cursor';
 import { SlashCommand, suggestionOptions } from './editor/SlashCommand';
 import { motion, AnimatePresence } from 'motion/react';
+import SheetEditor from './SheetEditor';
+import BoardEditor from './BoardEditor';
 
 const colors = ['#958DF1', '#F98181', '#FBBC88', '#FAF594', '#70CFF8', '#94FADB', '#B9F18D'];
 const names = ['Alice', 'Bob', 'Charlie', 'David', 'Eve', 'Frank', 'Grace'];
@@ -267,12 +269,24 @@ export default function DocumentEditor() {
     }
   };
 
+  const selectedKB = state.knowledgeBases.find(kb => kb.id === state.selectedKBId);
+  const showWatermark = selectedKB?.permissions.watermark;
+
   if (!editor) {
     return null;
   }
 
   return (
-    <div className="flex flex-col h-screen bg-surface-container-lowest">
+    <div className="flex flex-col h-screen bg-surface-container-lowest relative">
+      {showWatermark && (
+        <div className="absolute inset-0 z-[100] pointer-events-none overflow-hidden opacity-[0.03] select-none flex flex-wrap justify-around content-around">
+          {Array.from({ length: 24 }).map((_, i) => (
+            <div key={i} className="text-4xl font-bold -rotate-45 whitespace-nowrap p-12">
+              {state.currentDocTitle || 'CONFIDENTIAL'} - 林知非
+            </div>
+          ))}
+        </div>
+      )}
       {/* Header */}
       <header className="h-14 border-b border-outline-variant/10 flex items-center justify-between px-4 shrink-0 bg-white z-10">
         <div className="flex items-center gap-4">
@@ -352,253 +366,267 @@ export default function DocumentEditor() {
       </header>
 
       {/* Toolbar */}
-      <div className="h-14 border-b border-outline-variant/5 flex items-center justify-between px-6 shrink-0 bg-white/90 backdrop-blur-xl z-10 overflow-x-auto custom-scrollbar sticky top-0">
-        <div className="flex items-center gap-2 shrink-0">
-          {/* Text Style Group */}
-          <div className="flex items-center bg-gray-50 rounded-xl p-1 border border-gray-100 shadow-sm">
-            <div className="relative flex items-center">
-              <select 
-                className="appearance-none text-xs font-bold text-gray-700 bg-white border border-gray-200 rounded-lg pl-3 pr-8 py-1.5 outline-none cursor-pointer hover:border-gray-300 transition-all focus:ring-2 focus:ring-black/5"
-                onChange={(e) => {
-                  const val = e.target.value;
-                  if (val === 'p') editor.chain().focus().setParagraph().run();
-                  else editor.chain().focus().toggleHeading({ level: parseInt(val) as any }).run();
-                }}
-                value={editor.isActive('heading', { level: 1 }) ? '1' : editor.isActive('heading', { level: 2 }) ? '2' : editor.isActive('heading', { level: 3 }) ? '3' : 'p'}
-              >
-                <option value="p">正文文本</option>
-                <option value="1">一级标题</option>
-                <option value="2">二级标题</option>
-                <option value="3">三级标题</option>
-              </select>
-              <div className="absolute right-2.5 pointer-events-none text-gray-400">
-                <Type className="w-3 h-3" />
+      {state.currentDocType === 'doc' && (
+        <div className="h-14 border-b border-outline-variant/5 flex items-center justify-between px-6 shrink-0 bg-white/90 backdrop-blur-xl z-10 overflow-x-auto custom-scrollbar sticky top-0">
+          <div className="flex items-center gap-2 shrink-0">
+            {/* Text Style Group */}
+            <div className="flex items-center bg-gray-50 rounded-xl p-1 border border-gray-100 shadow-sm">
+              <div className="relative flex items-center">
+                <select 
+                  className="appearance-none text-xs font-bold text-gray-700 bg-white border border-gray-200 rounded-lg pl-3 pr-8 py-1.5 outline-none cursor-pointer hover:border-gray-300 transition-all focus:ring-2 focus:ring-black/5"
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === 'p') editor.chain().focus().setParagraph().run();
+                    else editor.chain().focus().toggleHeading({ level: parseInt(val) as any }).run();
+                  }}
+                  value={editor.isActive('heading', { level: 1 }) ? '1' : editor.isActive('heading', { level: 2 }) ? '2' : editor.isActive('heading', { level: 3 }) ? '3' : 'p'}
+                >
+                  <option value="p">正文文本</option>
+                  <option value="1">一级标题</option>
+                  <option value="2">二级标题</option>
+                  <option value="3">三级标题</option>
+                </select>
+                <div className="absolute right-2.5 pointer-events-none text-gray-400">
+                  <Type className="w-3 h-3" />
+                </div>
+              </div>
+            </div>
+            
+            <div className="w-px h-6 bg-gray-100 mx-1"></div>
+            
+            {/* Formatting Group */}
+            <div className="flex items-center bg-gray-50 rounded-xl p-1 border border-gray-100 shadow-sm">
+              <ToolbarBtn icon={Bold} isActive={editor.isActive('bold')} onClick={() => editor.chain().focus().toggleBold().run()} title="加粗 (Ctrl+B)" />
+              <ToolbarBtn icon={Italic} isActive={editor.isActive('italic')} onClick={() => editor.chain().focus().toggleItalic().run()} title="斜体 (Ctrl+I)" />
+              <ToolbarBtn icon={UnderlineIcon} isActive={editor.isActive('underline')} onClick={() => editor.chain().focus().toggleUnderline().run()} title="下划线 (Ctrl+U)" />
+              <ToolbarBtn icon={Strikethrough} isActive={editor.isActive('strike')} onClick={() => editor.chain().focus().toggleStrike().run()} title="删除线" />
+            </div>
+
+            <div className="w-px h-6 bg-gray-100 mx-1"></div>
+
+            {/* Alignment Group */}
+            <div className="flex items-center bg-gray-50 rounded-xl p-1 border border-gray-100 shadow-sm">
+              <ToolbarBtn 
+                icon={AlignLeft} 
+                isActive={editor.isActive({ textAlign: 'left' })} 
+                onClick={() => editor.chain().focus().setTextAlign('left').run()} 
+                title="左对齐"
+              />
+              <ToolbarBtn 
+                icon={AlignCenter} 
+                isActive={editor.isActive({ textAlign: 'center' })} 
+                onClick={() => editor.chain().focus().setTextAlign('center').run()} 
+                title="居中对齐"
+              />
+              <ToolbarBtn 
+                icon={AlignRight} 
+                isActive={editor.isActive({ textAlign: 'right' })} 
+                onClick={() => editor.chain().focus().setTextAlign('right').run()} 
+                title="右对齐"
+              />
+              <ToolbarBtn 
+                icon={AlignJustify} 
+                isActive={editor.isActive({ textAlign: 'justify' })} 
+                onClick={() => editor.chain().focus().setTextAlign('justify').run()} 
+                title="两端对齐"
+              />
+            </div>
+
+            <div className="w-px h-6 bg-gray-100 mx-1"></div>
+
+            {/* Lists Group */}
+            <div className="flex items-center bg-gray-50 rounded-xl p-1 border border-gray-100 shadow-sm">
+              <ToolbarBtn icon={List} isActive={editor.isActive('bulletList')} onClick={() => editor.chain().focus().toggleBulletList().run()} title="无序列表" />
+              <ToolbarBtn icon={ListOrdered} isActive={editor.isActive('orderedList')} onClick={() => editor.chain().focus().toggleOrderedList().run()} title="有序列表" />
+              <ToolbarBtn icon={CheckSquare} isActive={editor.isActive('taskList')} onClick={() => editor.chain().focus().toggleTaskList().run()} title="任务列表" />
+            </div>
+
+            <div className="w-px h-6 bg-gray-100 mx-1"></div>
+
+            {/* Blocks Group */}
+            <div className="flex items-center bg-gray-50 rounded-xl p-1 border border-gray-100 shadow-sm">
+              <ToolbarBtn 
+                icon={Quote} 
+                isActive={editor.isActive('blockquote')} 
+                onClick={() => editor.chain().focus().toggleBlockquote().run()} 
+                title="引用"
+              />
+              <ToolbarBtn 
+                icon={Code} 
+                isActive={editor.isActive('codeBlock')} 
+                onClick={() => editor.chain().focus().toggleCodeBlock().run()} 
+                title="代码块"
+              />
+            </div>
+
+            <div className="w-px h-6 bg-gray-100 mx-1"></div>
+
+            {/* Insert Group */}
+            <div className="flex items-center bg-gray-50 rounded-xl p-1 border border-gray-100 shadow-sm">
+              <ToolbarBtn icon={LinkIcon} isActive={editor.isActive('link')} onClick={() => {
+                if (editor.isActive('link')) {
+                  editor.chain().focus().unsetLink().run();
+                } else {
+                  const url = window.prompt('输入链接地址:');
+                  if (url) editor.chain().focus().setLink({ href: url }).run();
+                }
+              }} title="插入链接" />
+              <ToolbarBtn icon={ImageIcon} onClick={() => {
+                const url = window.prompt('输入图片地址:');
+                if (url) editor.chain().focus().setImage({ src: url }).run();
+              }} title="插入图片" />
+              <div className="relative flex items-center">
+                <ToolbarBtn 
+                  icon={Palette} 
+                  onClick={() => {
+                    const color = window.prompt('输入颜色代码 (例如: #ff0000):', editor.getAttributes('textStyle').color || '#000000');
+                    if (color !== null) {
+                      editor.chain().focus().setColor(color).run();
+                    }
+                  }}
+                  isActive={!!editor.getAttributes('textStyle').color}
+                  title="文本颜色"
+                />
+                {editor.getAttributes('textStyle').color && (
+                  <div 
+                    className="absolute bottom-1.5 right-1.5 w-1.5 h-1.5 rounded-full border border-white shadow-sm" 
+                    style={{ backgroundColor: editor.getAttributes('textStyle').color }}
+                  />
+                )}
               </div>
             </div>
           </div>
           
-          <div className="w-px h-6 bg-gray-100 mx-1"></div>
-          
-          {/* Formatting Group */}
-          <div className="flex items-center bg-gray-50 rounded-xl p-1 border border-gray-100 shadow-sm">
-            <ToolbarBtn icon={Bold} isActive={editor.isActive('bold')} onClick={() => editor.chain().focus().toggleBold().run()} title="加粗 (Ctrl+B)" />
-            <ToolbarBtn icon={Italic} isActive={editor.isActive('italic')} onClick={() => editor.chain().focus().toggleItalic().run()} title="斜体 (Ctrl+I)" />
-            <ToolbarBtn icon={UnderlineIcon} isActive={editor.isActive('underline')} onClick={() => editor.chain().focus().toggleUnderline().run()} title="下划线 (Ctrl+U)" />
-            <ToolbarBtn icon={Strikethrough} isActive={editor.isActive('strike')} onClick={() => editor.chain().focus().toggleStrike().run()} title="删除线" />
-          </div>
-
-          <div className="w-px h-6 bg-gray-100 mx-1"></div>
-
-          {/* Alignment Group */}
-          <div className="flex items-center bg-gray-50 rounded-xl p-1 border border-gray-100 shadow-sm">
-            <ToolbarBtn 
-              icon={AlignLeft} 
-              isActive={editor.isActive({ textAlign: 'left' })} 
-              onClick={() => editor.chain().focus().setTextAlign('left').run()} 
-              title="左对齐"
-            />
-            <ToolbarBtn 
-              icon={AlignCenter} 
-              isActive={editor.isActive({ textAlign: 'center' })} 
-              onClick={() => editor.chain().focus().setTextAlign('center').run()} 
-              title="居中对齐"
-            />
-            <ToolbarBtn 
-              icon={AlignRight} 
-              isActive={editor.isActive({ textAlign: 'right' })} 
-              onClick={() => editor.chain().focus().setTextAlign('right').run()} 
-              title="右对齐"
-            />
-            <ToolbarBtn 
-              icon={AlignJustify} 
-              isActive={editor.isActive({ textAlign: 'justify' })} 
-              onClick={() => editor.chain().focus().setTextAlign('justify').run()} 
-              title="两端对齐"
-            />
-          </div>
-
-          <div className="w-px h-6 bg-gray-100 mx-1"></div>
-
-          {/* Lists Group */}
-          <div className="flex items-center bg-gray-50 rounded-xl p-1 border border-gray-100 shadow-sm">
-            <ToolbarBtn icon={List} isActive={editor.isActive('bulletList')} onClick={() => editor.chain().focus().toggleBulletList().run()} title="无序列表" />
-            <ToolbarBtn icon={ListOrdered} isActive={editor.isActive('orderedList')} onClick={() => editor.chain().focus().toggleOrderedList().run()} title="有序列表" />
-            <ToolbarBtn icon={CheckSquare} isActive={editor.isActive('taskList')} onClick={() => editor.chain().focus().toggleTaskList().run()} title="任务列表" />
-          </div>
-
-          <div className="w-px h-6 bg-gray-100 mx-1"></div>
-
-          {/* Blocks Group */}
-          <div className="flex items-center bg-gray-50 rounded-xl p-1 border border-gray-100 shadow-sm">
-            <ToolbarBtn 
-              icon={Quote} 
-              isActive={editor.isActive('blockquote')} 
-              onClick={() => editor.chain().focus().toggleBlockquote().run()} 
-              title="引用"
-            />
-            <ToolbarBtn 
-              icon={Code} 
-              isActive={editor.isActive('codeBlock')} 
-              onClick={() => editor.chain().focus().toggleCodeBlock().run()} 
-              title="代码块"
-            />
-          </div>
-
-          <div className="w-px h-6 bg-gray-100 mx-1"></div>
-
-          {/* Insert Group */}
-          <div className="flex items-center bg-gray-50 rounded-xl p-1 border border-gray-100 shadow-sm">
-            <ToolbarBtn icon={LinkIcon} isActive={editor.isActive('link')} onClick={() => {
-              if (editor.isActive('link')) {
-                editor.chain().focus().unsetLink().run();
-              } else {
-                const url = window.prompt('输入链接地址:');
-                if (url) editor.chain().focus().setLink({ href: url }).run();
-              }
-            }} title="插入链接" />
-            <ToolbarBtn icon={ImageIcon} onClick={() => {
-              const url = window.prompt('输入图片地址:');
-              if (url) editor.chain().focus().setImage({ src: url }).run();
-            }} title="插入图片" />
-            <div className="relative flex items-center">
-              <ToolbarBtn 
-                icon={Palette} 
-                onClick={() => {
-                  const color = window.prompt('输入颜色代码 (例如: #ff0000):', editor.getAttributes('textStyle').color || '#000000');
-                  if (color !== null) {
-                    editor.chain().focus().setColor(color).run();
-                  }
-                }}
-                isActive={!!editor.getAttributes('textStyle').color}
-                title="文本颜色"
-              />
-              {editor.getAttributes('textStyle').color && (
-                <div 
-                  className="absolute bottom-1.5 right-1.5 w-1.5 h-1.5 rounded-full border border-white shadow-sm" 
-                  style={{ backgroundColor: editor.getAttributes('textStyle').color }}
-                />
-              )}
-            </div>
+          <div className="flex items-center gap-3 shrink-0 ml-4">
+            <button 
+              onClick={() => setIsTocOpen(!isTocOpen)}
+              className={`px-4 py-2 rounded-xl transition-all flex items-center gap-2 text-xs font-bold border ${
+                isTocOpen 
+                  ? 'bg-[#141414] text-white border-[#141414] shadow-lg shadow-black/10' 
+                  : 'bg-white text-gray-600 hover:bg-gray-50 border-gray-100'
+              }`}
+            >
+              <ListTree className="w-3.5 h-3.5" />
+              文档大纲
+            </button>
           </div>
         </div>
-        
-        <div className="flex items-center gap-3 shrink-0 ml-4">
-          <button 
-            onClick={() => setIsTocOpen(!isTocOpen)}
-            className={`px-4 py-2 rounded-xl transition-all flex items-center gap-2 text-xs font-bold border ${
-              isTocOpen 
-                ? 'bg-[#141414] text-white border-[#141414] shadow-lg shadow-black/10' 
-                : 'bg-white text-gray-600 hover:bg-gray-50 border-gray-100'
-            }`}
-          >
-            <ListTree className="w-3.5 h-3.5" />
-            文档大纲
-          </button>
-        </div>
-      </div>
+      )}
 
       {/* Main Content Area */}
       <div className="flex-1 flex overflow-hidden bg-surface relative">
-        {/* ToC Sidebar */}
-        <AnimatePresence>
-          {isTocOpen && (
-            <motion.div 
-              initial={{ x: -20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: -20, opacity: 0 }}
-              className={`
-                bg-surface-container flex flex-col shrink-0 z-20 transition-all duration-300
-                ${isTocPinned ? 'w-64 border-r border-outline-variant/10 relative' : 'w-64 absolute left-0 top-0 bottom-0 shadow-2xl'}
-              `}
-            >
-              <div className="p-4 border-b border-outline-variant/5 flex flex-col gap-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 font-bold text-sm text-on-surface">
-                    <ListTree className="w-4 h-4 text-primary-container" />
-                    大纲目录
+        {state.currentDocType === 'doc' ? (
+          <>
+            {/* ToC Sidebar */}
+            <AnimatePresence>
+              {isTocOpen && (
+                <motion.div 
+                  initial={{ x: -20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  exit={{ x: -20, opacity: 0 }}
+                  className={`
+                    bg-surface-container flex flex-col shrink-0 z-20 transition-all duration-300
+                    ${isTocPinned ? 'w-64 border-r border-outline-variant/10 relative' : 'w-64 absolute left-0 top-0 bottom-0 shadow-2xl'}
+                  `}
+                >
+                  <div className="p-4 border-b border-outline-variant/5 flex flex-col gap-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 font-bold text-sm text-on-surface">
+                        <ListTree className="w-4 h-4 text-primary-container" />
+                        大纲目录
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <button 
+                          onClick={() => setGroupSimilar(!groupSimilar)}
+                          className={`p-1.5 rounded-lg transition-colors ${groupSimilar ? 'bg-primary-container/20 text-primary-container' : 'text-on-surface-variant hover:bg-surface-container-low'}`}
+                          title="自动分组相似标题"
+                        >
+                          <Combine className="w-3.5 h-3.5" />
+                        </button>
+                        <button 
+                          onClick={() => setIsTocPinned(!isTocPinned)}
+                          className={`p-1.5 rounded-lg transition-colors ${isTocPinned ? 'bg-primary-container/20 text-primary-container' : 'text-on-surface-variant hover:bg-surface-container-low'}`}
+                          title={isTocPinned ? "取消固定" : "固定在侧边"}
+                        >
+                          {isTocPinned ? <Pin className="w-3.5 h-3.5" /> : <PinOff className="w-3.5 h-3.5" />}
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div className="relative group">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-on-surface-variant/40 group-focus-within:text-primary-container transition-colors" />
+                      <input 
+                        type="text" 
+                        placeholder="在目录中搜索..."
+                        className="w-full bg-surface-container-low border border-outline-variant/10 rounded-lg py-1.5 pl-8 pr-3 text-xs outline-none focus:ring-2 focus:ring-primary-container/20 focus:bg-white transition-all"
+                      />
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <button 
-                      onClick={() => setGroupSimilar(!groupSimilar)}
-                      className={`p-1.5 rounded-lg transition-colors ${groupSimilar ? 'bg-primary-container/20 text-primary-container' : 'text-on-surface-variant hover:bg-surface-container-low'}`}
-                      title="自动分组相似标题"
-                    >
-                      <Combine className="w-3.5 h-3.5" />
-                    </button>
-                    <button 
-                      onClick={() => setIsTocPinned(!isTocPinned)}
-                      className={`p-1.5 rounded-lg transition-colors ${isTocPinned ? 'bg-primary-container/20 text-primary-container' : 'text-on-surface-variant hover:bg-surface-container-low'}`}
-                      title={isTocPinned ? "取消固定" : "固定在侧边"}
-                    >
-                      {isTocPinned ? <Pin className="w-3.5 h-3.5" /> : <PinOff className="w-3.5 h-3.5" />}
-                    </button>
-                  </div>
-                </div>
-                
-                <div className="relative group">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-on-surface-variant/40 group-focus-within:text-primary-container transition-colors" />
-                  <input 
-                    type="text" 
-                    placeholder="在目录中搜索..."
-                    className="w-full bg-surface-container-low border border-outline-variant/10 rounded-lg py-1.5 pl-8 pr-3 text-xs outline-none focus:ring-2 focus:ring-primary-container/20 focus:bg-white transition-all"
-                  />
-                </div>
-              </div>
 
-              <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-                {displayToc.length > 0 ? (
-                  <ul className="space-y-1">
-                    {displayToc.map((item) => (
-                      <li 
-                        key={item.id} 
-                        className={`text-sm cursor-pointer transition-all rounded-lg px-2 py-1.5 line-clamp-1 ${
-                          item.isGroupHeader ? 'font-bold text-primary text-[10px] uppercase tracking-widest mt-4 mb-1 hover:bg-transparent' :
-                          item.level === 1 ? 'font-bold text-on-surface hover:bg-white hover:text-primary-container' : 
-                          item.level === 2 ? 'pl-4 text-on-surface-variant hover:bg-white hover:text-primary-container' : 
-                          'pl-8 text-on-surface-variant/70 text-xs hover:bg-white hover:text-primary-container'
-                        } ${item.isGroupedItem ? 'border-l-2 border-primary-container/20 ml-2 pl-3' : ''}`}
-                        onClick={() => {
-                          if (!item.isGroupHeader) {
-                            scrollToHeading(item.id);
-                            if (!isTocPinned) setIsTocOpen(false);
-                          }
-                        }}
-                        title={item.text}
-                      >
-                        {item.text}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <div className="flex flex-col items-center justify-center mt-20 text-on-surface-variant/30">
-                    <ListTree className="w-8 h-8 mb-2 opacity-20" />
-                    <p className="text-xs font-medium">暂无目录结构</p>
+                  <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+                    {displayToc.length > 0 ? (
+                      <ul className="space-y-1">
+                        {displayToc.map((item) => (
+                          <li 
+                            key={item.id} 
+                            className={`text-sm cursor-pointer transition-all rounded-lg px-2 py-1.5 line-clamp-1 ${
+                              item.isGroupHeader ? 'font-bold text-primary text-[10px] uppercase tracking-widest mt-4 mb-1 hover:bg-transparent' :
+                              item.level === 1 ? 'font-bold text-on-surface hover:bg-white hover:text-primary-container' : 
+                              item.level === 2 ? 'pl-4 text-on-surface-variant hover:bg-white hover:text-primary-container' : 
+                              'pl-8 text-on-surface-variant/70 text-xs hover:bg-white hover:text-primary-container'
+                            } ${item.isGroupedItem ? 'border-l-2 border-primary-container/20 ml-2 pl-3' : ''}`}
+                            onClick={() => {
+                              if (!item.isGroupHeader) {
+                                scrollToHeading(item.id);
+                                if (!isTocPinned) setIsTocOpen(false);
+                              }
+                            }}
+                            title={item.text}
+                          >
+                            {item.text}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center mt-20 text-on-surface-variant/30">
+                        <ListTree className="w-8 h-8 mb-2 opacity-20" />
+                        <p className="text-xs font-medium">暂无目录结构</p>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-              
-              <div className="p-4 border-t border-outline-variant/5 bg-surface-container-low/50">
-                <div className="flex justify-between items-center text-[10px] font-bold text-on-surface-variant/40 uppercase tracking-widest">
-                  <div className="flex items-center gap-1">
-                    <FileText className="w-3 h-3" />
-                    {stats.words} 字
+                  
+                  <div className="p-4 border-t border-outline-variant/5 bg-surface-container-low/50">
+                    <div className="flex justify-between items-center text-[10px] font-bold text-on-surface-variant/40 uppercase tracking-widest">
+                      <div className="flex items-center gap-1">
+                        <FileText className="w-3 h-3" />
+                        {stats.words} 字
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <LayoutDashboard className="w-3 h-3" />
+                        约 {stats.pages} 页
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <LayoutDashboard className="w-3 h-3" />
-                    约 {stats.pages} 页
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-        {/* Editor Area */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar flex justify-center py-10 relative">
-          <div className="w-full max-w-4xl bg-white shadow-sm border border-outline-variant/5 rounded-lg min-h-[800px] p-16 focus-within:ring-2 focus-within:ring-primary-container/10 transition-shadow">
-            <EditorContent editor={editor} />
+            {/* Editor Area */}
+            <div className="flex-1 overflow-y-auto custom-scrollbar flex justify-center py-10 relative">
+              <div className="w-full max-w-4xl bg-white shadow-sm border border-outline-variant/5 rounded-lg min-h-[800px] p-16 focus-within:ring-2 focus-within:ring-primary-container/10 transition-shadow">
+                <EditorContent editor={editor} />
+              </div>
+            </div>
+          </>
+        ) : state.currentDocType === 'sheet' ? (
+          <div className="flex-1 flex flex-col">
+            <SheetEditor />
           </div>
-        </div>
+        ) : (
+          <div className="flex-1 flex flex-col">
+            <BoardEditor />
+          </div>
+        )}
       </div>
     </div>
   );

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 
 export default function TopNav() {
-  const { state, setView } = useApp();
+  const { state, setView, setGlobalSearchQuery } = useApp();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
@@ -42,6 +42,8 @@ export default function TopNav() {
             className="bg-gray-50 border border-gray-100 text-sm rounded-xl pl-10 pr-4 py-2 w-72 focus:bg-white focus:ring-4 focus:ring-gray-100 focus:border-gray-200 outline-none transition-all" 
             placeholder="搜索文档、知识库..." 
             type="text"
+            value={state.globalSearchQuery}
+            onChange={(e) => setGlobalSearchQuery(e.target.value)}
           />
           <div className="absolute right-3 flex items-center gap-1">
             <kbd className="px-1.5 py-0.5 text-[10px] font-sans font-medium text-gray-400 bg-white border border-gray-200 rounded-md">⌘</kbd>
@@ -92,7 +94,15 @@ export default function TopNav() {
                         time="昨天" 
                       />
                     </div>
-                    <button className="w-full py-3 text-xs font-bold text-gray-400 hover:text-gray-900 border-t border-gray-50 transition-colors">查看全部通知</button>
+                    <button 
+                      onClick={() => {
+                        setView('notifications');
+                        setIsNotificationsOpen(false);
+                      }}
+                      className="w-full py-3 text-xs font-bold text-gray-400 hover:text-gray-900 border-t border-gray-50 transition-colors"
+                    >
+                      查看全部通知
+                    </button>
                   </motion.div>
                 </>
               )}

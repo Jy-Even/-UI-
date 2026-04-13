@@ -23,6 +23,22 @@ export default function Workbench() {
     openVersionHistory(title);
   };
 
+  const filteredKBs = state.knowledgeBases.filter(kb => 
+    kb.name.toLowerCase().includes(state.globalSearchQuery.toLowerCase()) ||
+    kb.description.toLowerCase().includes(state.globalSearchQuery.toLowerCase())
+  );
+
+  const recentDocs = [
+    { title: '2024 年度战略规划白皮书 v1.0', time: '1 HOURS AGO' },
+    { title: '2024 年度战略规划白皮书 v2.0', time: '2 HOURS AGO' },
+    { title: '2024 年度战略规划白皮书 v3.0', time: '3 HOURS AGO' },
+  ].filter(doc => doc.title.toLowerCase().includes(state.globalSearchQuery.toLowerCase()));
+
+  const starredDocs = [
+    { title: '产品设计规范 - 核心组件库', date: '2024-03-11' },
+    { title: 'Q3 季度研发团队 OKR 目标对齐', date: '2024-03-12' },
+  ].filter(doc => doc.title.toLowerCase().includes(state.globalSearchQuery.toLowerCase()));
+
   return (
     <div className="p-12 max-w-7xl mx-auto">
       <section className="mb-16">
@@ -33,7 +49,10 @@ export default function Workbench() {
             </div>
             <h2 className="text-2xl font-bold text-gray-900">我的知识库</h2>
           </div>
-          <button className="text-sm font-bold text-gray-400 hover:text-gray-900 transition-colors flex items-center gap-1 group">
+          <button 
+            onClick={() => setView('all-kbs')}
+            className="text-sm font-bold text-gray-400 hover:text-gray-900 transition-colors flex items-center gap-1 group"
+          >
             查看全部
             <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </button>
@@ -50,7 +69,7 @@ export default function Workbench() {
             <span className="font-bold text-xs uppercase tracking-widest">创建新知识库</span>
           </motion.div>
 
-          {state.knowledgeBases.map((kb) => (
+          {filteredKBs.map((kb) => (
             <motion.div
               key={kb.id}
               whileHover={{ y: -6 }}
@@ -89,29 +108,30 @@ export default function Workbench() {
             <h2 className="text-2xl font-bold text-gray-900">最近编辑</h2>
           </div>
           <div className="space-y-4">
-            {[1, 2, 3].map((i) => {
-              const title = `2024 年度战略规划白皮书 v${i}.0`;
+            {recentDocs.length > 0 ? recentDocs.map((doc, i) => {
               return (
                 <motion.div 
                   key={i} 
                   whileHover={{ x: 8 }}
-                  onClick={() => openEditor(title)}
+                  onClick={() => openEditor(doc.title)}
                   className="bg-white p-5 rounded-2xl border border-gray-100 flex items-center gap-5 hover:shadow-xl hover:shadow-black/5 transition-all cursor-pointer group"
                 >
                   <div className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-[#141414] group-hover:text-white transition-all">
                     <FileText className="w-6 h-6" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="font-bold text-base text-gray-900 group-hover:text-black transition-colors truncate">{title}</div>
-                    <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">UPDATED {i} HOURS AGO</div>
+                    <div className="font-bold text-base text-gray-900 group-hover:text-black transition-colors truncate">{doc.title}</div>
+                    <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">UPDATED {doc.time}</div>
                   </div>
                   <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                    <ActionButton icon={Eye} onClick={(e) => openPreview(title, e)} title="预览" />
-                    <ActionButton icon={History} onClick={(e) => openHistory(title, e)} title="历史" />
+                    <ActionButton icon={Eye} onClick={(e) => openPreview(doc.title, e)} title="预览" />
+                    <ActionButton icon={History} onClick={(e) => openHistory(doc.title, e)} title="历史" />
                   </div>
                 </motion.div>
               );
-            })}
+            }) : (
+              <p className="text-sm text-gray-400 py-4">未找到匹配的文档</p>
+            )}
           </div>
         </section>
 
@@ -123,29 +143,30 @@ export default function Workbench() {
             <h2 className="text-2xl font-bold text-gray-900">收藏夹</h2>
           </div>
           <div className="space-y-4">
-            {[1, 2].map((i) => {
-              const title = i === 1 ? '产品设计规范 - 核心组件库' : 'Q3 季度研发团队 OKR 目标对齐';
+            {starredDocs.length > 0 ? starredDocs.map((doc, i) => {
               return (
                 <motion.div 
                   key={i} 
                   whileHover={{ x: 8 }}
-                  onClick={() => openEditor(title)}
+                  onClick={() => openEditor(doc.title)}
                   className="bg-white p-5 rounded-2xl border border-gray-100 flex items-center gap-5 hover:shadow-xl hover:shadow-black/5 transition-all cursor-pointer group"
                 >
                   <div className="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center text-amber-500 group-hover:bg-amber-500 group-hover:text-white transition-all duration-500">
                     <Star className="w-6 h-6 fill-current" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="font-bold text-base text-gray-900 group-hover:text-black transition-colors truncate">{title}</div>
-                    <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">STARRED ON 2024-03-1{i}</div>
+                    <div className="font-bold text-base text-gray-900 group-hover:text-black transition-colors truncate">{doc.title}</div>
+                    <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">STARRED ON {doc.date}</div>
                   </div>
                   <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                    <ActionButton icon={Eye} onClick={(e) => openPreview(title, e)} title="预览" />
-                    <ActionButton icon={History} onClick={(e) => openHistory(title, e)} title="历史" />
+                    <ActionButton icon={Eye} onClick={(e) => openPreview(doc.title, e)} title="预览" />
+                    <ActionButton icon={History} onClick={(e) => openHistory(doc.title, e)} title="历史" />
                   </div>
                 </motion.div>
               );
-            })}
+            }) : (
+              <p className="text-sm text-gray-400 py-4">未找到匹配的文档</p>
+            )}
           </div>
         </section>
       </div>

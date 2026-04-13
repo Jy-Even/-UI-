@@ -19,6 +19,8 @@ import Trash from './components/Trash';
 import DocumentEditor from './components/DocumentEditor';
 import VersionHistory from './components/VersionHistory';
 import CreateDocModal from './components/CreateDocModal';
+import AllKnowledgeBases from './components/AllKnowledgeBases';
+import NotificationsView from './components/NotificationsView';
 import TemplateGalleryModal from './components/TemplateGalleryModal';
 import { AppProvider, useApp } from './AppContext';
 
@@ -49,6 +51,8 @@ function AppContent() {
         
         <main className="flex-1 ml-[260px] overflow-y-auto bg-[#F8F9FA] custom-scrollbar">
           {state.view === 'workbench' && <Workbench />}
+          {state.view === 'all-kbs' && <AllKnowledgeBases />}
+          {state.view === 'notifications' && <NotificationsView />}
           {state.view === 'trash' && <Trash />}
           {state.view === 'management' && (
             <div className="min-h-full flex flex-col">
@@ -134,16 +138,6 @@ function AppContent() {
       <CreateKBModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} />
       <CreateDocModal />
       <TemplateGalleryModal />
-      
-      {/* Floating Action Button */}
-      <motion.button 
-        whileHover={{ scale: 1.1, rotate: 90 }}
-        whileTap={{ scale: 0.9 }}
-        onClick={() => setIsCreateDocModalOpen(true)}
-        className="fixed bottom-10 right-10 w-16 h-16 bg-[#141414] text-white rounded-2xl shadow-2xl flex items-center justify-center z-50 group"
-      >
-        <Plus className="w-8 h-8 group-hover:scale-110 transition-transform" />
-      </motion.button>
     </div>
   );
 }
