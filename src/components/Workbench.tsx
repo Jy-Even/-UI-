@@ -7,6 +7,7 @@ import DocumentPreviewModal from './DocumentPreviewModal';
 export default function Workbench() {
   const { state, selectKB, setView, setIsCreateModalOpen, openEditor, openVersionHistory } = useApp();
   const [previewDoc, setPreviewDoc] = useState<{ isOpen: boolean; title: string }>({ isOpen: false, title: '' });
+  const [visibleKBCount, setVisibleKBCount] = useState(7);
 
   const handleKBClick = (id: string) => {
     selectKB(id);
@@ -69,7 +70,7 @@ export default function Workbench() {
             <span className="font-bold text-xs uppercase tracking-widest">创建新知识库</span>
           </motion.div>
 
-          {filteredKBs.map((kb) => (
+          {filteredKBs.slice(0, visibleKBCount).map((kb) => (
             <motion.div
               key={kb.id}
               whileHover={{ y: -6 }}
@@ -96,6 +97,19 @@ export default function Workbench() {
               </div>
             </motion.div>
           ))}
+
+          {filteredKBs.length > visibleKBCount && (
+            <motion.div
+              whileHover={{ scale: 0.98 }}
+              onClick={() => setVisibleKBCount(prev => prev + 8)}
+              className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all cursor-pointer flex flex-col items-center justify-center text-gray-400 hover:text-gray-900 group h-full min-h-[220px]"
+            >
+              <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center mb-3 group-hover:bg-gray-100 transition-colors">
+                <ChevronRight className="w-5 h-5" />
+              </div>
+              <span className="font-bold text-[10px] uppercase tracking-widest">显示更多 ({filteredKBs.length - visibleKBCount})</span>
+            </motion.div>
+          )}
         </div>
       </section>
 
