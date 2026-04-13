@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'motion/react';
 export default function TopNav() {
   const { state, setView } = useApp();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
   return (
     <header className="fixed top-0 w-full h-16 z-50 bg-white/80 backdrop-blur-xl flex items-center justify-between px-8 border-b border-gray-100">
@@ -49,10 +50,54 @@ export default function TopNav() {
         </div>
 
         <div className="flex items-center gap-2">
-          <button className="text-gray-500 hover:text-gray-900 hover:bg-gray-50 p-2.5 rounded-xl transition-all relative group">
-            <Bell className="w-5 h-5 group-hover:rotate-12 transition-transform" />
-            <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-          </button>
+          <div className="relative">
+            <button 
+              onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+              className={`text-gray-500 hover:text-gray-900 hover:bg-gray-50 p-2.5 rounded-xl transition-all relative group ${isNotificationsOpen ? 'bg-gray-50 text-gray-900' : ''}`}
+            >
+              <Bell className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+              <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+            </button>
+
+            <AnimatePresence>
+              {isNotificationsOpen && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setIsNotificationsOpen(false)} />
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 py-2 z-20 overflow-hidden"
+                  >
+                    <div className="px-4 py-3 border-b border-gray-50 flex items-center justify-between">
+                      <span className="text-sm font-bold text-gray-900">通知消息</span>
+                      <button className="text-[10px] font-bold text-gray-400 hover:text-gray-900 uppercase tracking-widest">全部已读</button>
+                    </div>
+                    <div className="max-h-[320px] overflow-y-auto custom-scrollbar">
+                      <NotificationItem 
+                        title="文档更新" 
+                        content="林知非 更新了《2024 年度战略规划白皮书》" 
+                        time="10分钟前" 
+                        unread 
+                      />
+                      <NotificationItem 
+                        title="权限变更" 
+                        content="陈子珊 将您的角色调整为 管理员" 
+                        time="2小时前" 
+                        unread 
+                      />
+                      <NotificationItem 
+                        title="新成员加入" 
+                        content="王小明 加入了 产品设计知识库" 
+                        time="昨天" 
+                      />
+                    </div>
+                    <button className="w-full py-3 text-xs font-bold text-gray-400 hover:text-gray-900 border-t border-gray-50 transition-colors">查看全部通知</button>
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
+          </div>
           
           <div className="relative">
             <button 
@@ -119,6 +164,19 @@ function DropdownItem({ icon: Icon, label, variant = 'default' }: { icon: any; l
     }`}>
       <Icon className="w-4 h-4" />
       {label}
+    </button>
+  );
+}
+
+function NotificationItem({ title, content, time, unread = false }: { title: string; content: string; time: string; unread?: boolean }) {
+  return (
+    <button className="w-full px-4 py-3 hover:bg-gray-50 transition-colors text-left border-b border-gray-50 last:border-0 relative">
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-xs font-bold text-gray-900">{title}</span>
+        <span className="text-[10px] text-gray-400">{time}</span>
+      </div>
+      <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">{content}</p>
+      {unread && <div className="absolute top-4 right-2 w-1.5 h-1.5 bg-red-500 rounded-full" />}
     </button>
   );
 }

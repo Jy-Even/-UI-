@@ -84,8 +84,15 @@ export default function Sidebar({ onCreateNew }: SidebarProps) {
                   ))}
                 </div>
                 <div className="mt-2 pt-2 border-t border-gray-50 px-3">
-                  <button className="w-full flex items-center gap-2 px-3 py-2.5 text-xs text-gray-900 font-bold hover:bg-gray-50 rounded-xl transition-colors">
-                    <Plus className="w-4 h-4" />
+                  <button 
+                    onClick={() => {
+                      setView('management');
+                      setManagementTab('info');
+                      setIsKBMenuOpen(false);
+                    }}
+                    className="w-full flex items-center gap-2 px-3 py-2.5 text-xs text-gray-900 font-bold hover:bg-gray-50 rounded-xl transition-colors"
+                  >
+                    <Settings className="w-4 h-4" />
                     管理知识库
                   </button>
                 </div>

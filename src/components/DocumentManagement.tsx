@@ -129,7 +129,7 @@ export default function DocumentManagement() {
                       <span className="text-sm text-gray-600 font-medium">{doc.author}</span>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center justify-end gap-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 translate-x-2 group-hover:translate-x-0">
                         <ActionButton icon={Eye} onClick={(e) => openPreview(doc.title, e)} title="预览" />
                         <ActionButton icon={History} onClick={(e) => openHistory(doc.title, e)} title="历史" />
                         <ActionButton icon={Download} onClick={(e) => openExport(doc.title, doc.type, e)} title="导出" />

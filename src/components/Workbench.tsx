@@ -38,44 +38,45 @@ export default function Workbench() {
             <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </button>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <motion.div
+            whileHover={{ scale: 0.98 }}
+            onClick={() => setIsCreateModalOpen(true)}
+            className="bg-gray-50/50 rounded-2xl p-6 border-2 border-dashed border-gray-200 flex flex-col items-center justify-center text-gray-400 hover:bg-white hover:border-gray-900 hover:text-gray-900 transition-all cursor-pointer group h-full min-h-[220px]"
+          >
+            <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-4 group-hover:bg-gray-900 group-hover:text-white transition-all">
+              <Plus className="w-6 h-6" />
+            </div>
+            <span className="font-bold text-xs uppercase tracking-widest">创建新知识库</span>
+          </motion.div>
+
           {state.knowledgeBases.map((kb) => (
             <motion.div
               key={kb.id}
-              whileHover={{ y: -8 }}
+              whileHover={{ y: -6 }}
               onClick={() => handleKBClick(kb.id)}
-              className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm hover:shadow-2xl hover:shadow-black/5 transition-all cursor-pointer group relative overflow-hidden"
+              className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-xl hover:shadow-black/5 transition-all cursor-pointer group relative overflow-hidden flex flex-col h-full min-h-[220px]"
             >
-              <div className="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-400 mb-6 group-hover:bg-[#141414] group-hover:text-white transition-all duration-500">
-                <FolderHeart className="w-7 h-7" />
+              <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 mb-5 group-hover:bg-[#141414] group-hover:text-white transition-all duration-500">
+                <FolderHeart className="w-6 h-6" />
               </div>
-              <h3 className="font-bold text-xl mb-3 text-gray-900 group-hover:text-black transition-colors">{kb.name}</h3>
-              <p className="text-sm text-gray-500 line-clamp-2 mb-8 min-h-[40px] leading-relaxed font-medium">{kb.description}</p>
-              <div className="flex items-center justify-between pt-6 border-t border-gray-50">
-                <div className="flex items-center gap-3">
-                  <div className="flex -space-x-2">
+              <h3 className="font-bold text-lg mb-2 text-gray-900 group-hover:text-black transition-colors">{kb.name}</h3>
+              <p className="text-xs text-gray-500 line-clamp-2 mb-6 min-h-[32px] leading-relaxed font-medium">{kb.description}</p>
+              <div className="flex items-center justify-between pt-5 border-t border-gray-50 mt-auto">
+                <div className="flex items-center gap-2">
+                  <div className="flex -space-x-1.5">
                     {[1, 2, 3].map(i => (
-                      <div key={i} className="w-6 h-6 rounded-full border-2 border-white bg-gray-100 flex items-center justify-center text-[10px] font-bold text-gray-500">
+                      <div key={i} className="w-5 h-5 rounded-full border-2 border-white bg-gray-100 flex items-center justify-center text-[8px] font-bold text-gray-500">
                         {String.fromCharCode(64 + i)}
                       </div>
                     ))}
                   </div>
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{kb.members.length} MEMBERS</span>
+                  <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{kb.members.length} 成员</span>
                 </div>
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{kb.createdAt}</span>
+                <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{kb.createdAt}</span>
               </div>
             </motion.div>
           ))}
-          <motion.div
-            whileHover={{ scale: 0.98 }}
-            onClick={() => setIsCreateModalOpen(true)}
-            className="bg-gray-50/50 rounded-3xl p-8 border-2 border-dashed border-gray-200 flex flex-col items-center justify-center text-gray-400 hover:bg-white hover:border-gray-900 hover:text-gray-900 transition-all cursor-pointer group"
-          >
-            <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mb-4 group-hover:bg-gray-900 group-hover:text-white transition-all">
-              <Plus className="w-7 h-7" />
-            </div>
-            <span className="font-bold text-sm uppercase tracking-widest">创建新知识库</span>
-          </motion.div>
         </div>
       </section>
 
