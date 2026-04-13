@@ -1,4 +1,4 @@
-import { X, Mail, Shield, Send, MessageSquare, Users, Search, Check } from 'lucide-react';
+import { X, Mail, Shield, Send, MessageSquare, Users, Search, Check, FileText } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useState } from 'react';
 import { Role } from '../types';
@@ -30,6 +30,7 @@ export default function InviteMemberModal({ isOpen, onClose, onInvite }: InviteM
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<Role>('MEMBER');
   const [reason, setReason] = useState('');
+  const [invitationLetter, setInvitationLetter] = useState('');
   const [search, setSearch] = useState('');
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
@@ -40,10 +41,11 @@ export default function InviteMemberModal({ isOpen, onClose, onInvite }: InviteM
     } else {
       const user = MOCK_SYSTEM_USERS.find(u => u.id === selectedUserId);
       if (!user) return;
-      onInvite(user.email, role, reason);
+      onInvite(user.email, role, invitationLetter || reason);
     }
     setEmail('');
     setReason('');
+    setInvitationLetter('');
     setSelectedUserId(null);
     onClose();
   };
@@ -147,6 +149,28 @@ export default function InviteMemberModal({ isOpen, onClose, onInvite }: InviteM
                       </button>
                     ))}
                   </div>
+
+                  <AnimatePresence>
+                    {selectedUserId && (
+                      <motion.div 
+                        initial={{ opacity: 0, y: -10, height: 0 }}
+                        animate={{ opacity: 1, y: 0, height: 'auto' }}
+                        exit={{ opacity: 0, y: -10, height: 0 }}
+                        className="space-y-2 pt-2 overflow-hidden"
+                      >
+                        <label className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                          <FileText className="w-4 h-4 text-blue-500" />
+                          邀请函
+                        </label>
+                        <textarea 
+                          className="w-full bg-blue-50/30 border border-blue-100 rounded-xl px-4 py-3 text-sm focus:bg-white focus:ring-4 focus:ring-blue-100/20 outline-none transition-all min-h-[100px] resize-none font-medium" 
+                          placeholder="输入一段诚挚的邀请语..." 
+                          value={invitationLetter}
+                          onChange={(e) => setInvitationLetter(e.target.value)}
+                        />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               )}
 
@@ -172,18 +196,20 @@ export default function InviteMemberModal({ isOpen, onClose, onInvite }: InviteM
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-900 flex items-center gap-2">
-                  <MessageSquare className="w-4 h-4 text-gray-400" />
-                  邀请理由 <span className="text-gray-300 font-normal">(可选)</span>
-                </label>
-                <textarea 
-                  className="w-full bg-gray-50 border-transparent rounded-xl px-4 py-3 text-sm focus:bg-white focus:ring-4 focus:ring-gray-100 focus:border-gray-200 outline-none transition-all min-h-[80px] resize-none font-medium" 
-                  placeholder="说点什么来邀请Ta加入..." 
-                  value={reason}
-                  onChange={(e) => setReason(e.target.value)}
-                />
-              </div>
+              {mode === 'email' && (
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                    <MessageSquare className="w-4 h-4 text-gray-400" />
+                    邀请理由 <span className="text-gray-300 font-normal">(可选)</span>
+                  </label>
+                  <textarea 
+                    className="w-full bg-gray-50 border-transparent rounded-xl px-4 py-3 text-sm focus:bg-white focus:ring-4 focus:ring-gray-100 focus:border-gray-200 outline-none transition-all min-h-[80px] resize-none font-medium" 
+                    placeholder="说点什么来邀请Ta加入..." 
+                    value={reason}
+                    onChange={(e) => setReason(e.target.value)}
+                  />
+                </div>
+              )}
 
               <div className="pt-4">
                 <button 
